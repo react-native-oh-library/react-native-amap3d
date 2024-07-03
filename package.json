@@ -1,8 +1,7 @@
 {
   "name": "react-native-amap3d",
   "version": "0.0.0",
-  "description": "react-native 高德地图组件，支持 Android + iOS",
-  "author": "7c00 <i@7c00.cc>",
+  "description": "react-native 高德地图组件，支持 HarmonyOS",
   "license": "MIT",
   "keywords": [
     "react-native",
@@ -13,9 +12,6 @@
   "main": "lib/src",
   "files": [
     "lib/src",
-    "lib/android/src",
-    "lib/android/build.gradle",
-    "lib/ios",
     "react-native.config.js",
     "react-native-amap3d.podspec"
   ],
@@ -26,10 +22,7 @@
   },
   "scripts": {
     "start": "react-native start",
-    "android": "react-native run-android",
-    "release-android": "react-native run-android --variant=release",
     "reload": "adb reverse tcp:8081 tcp:8081 && adb shell input text rr",
-    "ios": "react-native run-ios"
   },
   "dependencies": {
     "supercluster": "^7.1.4"
