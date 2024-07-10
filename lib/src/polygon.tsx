@@ -1,31 +1,17 @@
-import { requireNativeComponent } from "react-native";
-import { LatLng } from "./types";
 
-export interface Polygon {
-  /**
-   * 节点坐标
-   */
-  points: LatLng[];
+import AMapPolygon ,{PolygonProps} from './polygonNativeComponent'
+import React , {Component}  from 'react';
 
-  /**
-   * 边线宽度
-   */
-  strokeWidth?: number;
 
-  /**
-   * 边线颜色
-   */
-  strokeColor?: string;
+export default class Polygon extends Component<PolygonProps> {
+ 
+  constructor(props: PolygonProps) {
+    super(props);
+  }
 
-  /**
-   * 填充颜色
-   */
-  fillColor?: string;
-
-  /**
-   * 层级
-   */
-  zIndex?: number;
+  render() {
+    return (
+      <AMapPolygon {...this.props} />
+    );
+  }
 }
-
-export default requireNativeComponent<Polygon>("AMapPolygon");
