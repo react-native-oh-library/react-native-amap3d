@@ -1,185 +1,541 @@
-# react-native-amap3d [![][version-badge]][npm] [![](https://github.com/qiuxiang/react-native-amap3d/actions/workflows/build.yml/badge.svg)](https://github.com/qiuxiang/react-native-amap3d/actions/workflows/build.yml)
+<!--{%raw%}-->
+> 模板版本：v0.2.2
 
-**注意：该项目目前只维护，不加新功能。**
+<p align="center">
+  <h1 align="center"> <code>react-native-amap3d</code> </h1>
+</p>
+<p align="center">
+    <a href="https://github.com/qiuxiang/react-native-amap3d">
+        <img src="https://img.shields.io/badge/platforms-android%20|%20ios%20|%20harmony%20-lightgrey.svg" alt="Supported platforms" />
+    </a>
+    <a href="https://github.com/qiuxiang/react-native-amap3d/blob/main/license">
+        <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License" />
+        <!-- <img src="https://img.shields.io/badge/license-Apache-blue.svg" alt="License" /> -->
+    </a>
+</p>
 
-react-native 高德地图组件，使用最新 3D SDK，支持 Android + iOS，受 [react-native-maps](https://github.com/airbnb/react-native-maps) 启发，提供功能丰富且易用的接口。
+> [!TIP] [Github 地址](https://github.com/react-native-oh-library/react-native-amap3d)
 
-相关项目推荐：
 
-- [react-native-baidumap-sdk（百度地图 SDK）](https://github.com/qiuxiang/react-native-baidumap-sdk)
-- [react-native-amap-geolocation（高德地图定位模块）](https://github.com/qiuxiang/react-native-amap-geolocation)
+## 安装与使用
 
-## 功能
+请到三方库的 Releases 发布地址查看配套的版本信息：[@react-native-oh-tpl/react-native-amap3d Releases](https://github.com/react-native-oh-library/react-native-amap3d/releases)，并下载适用版本的 tgz 包。
 
-- 地图模式切换（常规、卫星、导航、夜间）
-- 3D 建筑、路况、室内地图
-- 内置地图控件的显示隐藏（指南针、比例尺、定位按钮、缩放按钮）
-- 手势交互控制（平移、缩放、旋转、倾斜）
-- 中心坐标、缩放级别、倾斜度的设置，支持动画过渡
-- 地图事件（onPress、onLongPress、onLocation、onCameraMove、onCameraIdle 等）
-- 地图标记（Marker）
-- 折线绘制（Polyline）
-- 多边形绘制（Polygon）
-- 圆形绘制（Circle）
-- 热力图（HeatMap）
-- 海量点（MultiPoint）
-- 点聚合（Cluster）
+进入到工程目录并输入以下命令：
 
-## 接口文档
+> [!TIP] # 处替换为 tgz 包的路径
 
-https://qiuxiang.github.io/react-native-amap3d/api/
+<!-- tabs:start -->
 
-## 安装
+#### **npm**
 
 ```bash
-npm i react-native-amap3d
+npm install @react-native-oh-tpl/react-native-amap3d@file:#
 ```
 
-### 添加高德 API Key
+#### **yarn**
 
-首先你需要获取高德地图 API Key：
+```bash
+yarn add @react-native-oh-tpl/react-native-amap3d@file:#
+```
 
-- [Aandroid](http://lbs.amap.com/api/android-sdk/guide/create-project/get-key)
-- [iOS](https://lbs.amap.com/api/ios-sdk/guide/create-project/get-key)
+<!-- tabs:end -->
 
-然后你需要在显示地图前调用接口设置 API key：
+下面的代码展示了这个库的基本使用场景：
+
+> [!WARNING] 使用时 import 的库名不变。
 
 ```js
-import { AMapSdk } from "react-native-amap3d";
-import { Platform } from "react-native";
+import React from 'react';
+import { ScrollView, Text, View,StyleSheet, Alert } from 'react-native';
+import {MapView, Circle, Polygon, Polyline, Marker, LatLng,CameraPosition,voidEvent} from 'react-native-amap3d';
 
-AMapSdk.init(
-  Platform.select({
-    android: "c52c7169e6df23490e3114330098aaac",
-    ios: "186d3464209b74effa4d8391f441f14d",
-  })
-);
-```
+import type * as ReactNative from "react-native";
 
-## 用法
+const points = [
+  {
+    latitude: 39.806901,
+    longitude: 116.397972,
+  },
+  {
+    latitude: 39.806901,
+    longitude: 116.297972,
+  },
+  {
+    latitude: 39.906901,
+    longitude: 116.397972,
+  },
+];
 
-### 显示地图
+const points2 = [
+  {
+    latitude: 39.836901,
+    longitude: 116.497972,
+  },
+  {
+    latitude: 39.836901,
+    longitude: 116.397972,
+  },
+  {
+    latitude: 39.936901,
+    longitude: 116.497972,
+  },
+];
 
-```jsx
-import { MapView, MapType } from "react-native-amap3d";
+const line1 = [
+  { latitude: 40.006901, longitude: 116.097972 },
+  { latitude: 40.006901, longitude: 116.597972 },
+];
+const line3 = [
+  { latitude: 39.806901, longitude: 116.097972 },
+  { latitude: 39.806901, longitude: 116.257972 },
+  { latitude: 39.806901, longitude: 116.457972 },
+  { latitude: 39.806901, longitude: 116.597972 },
+];
 
-<MapView
-  mapType={MapType.Satellite}
-  initialCameraPosition={{
-    target: {
-      latitude: 39.91095,
-      longitude: 116.37296,
-    },
-    zoom: 8,
-  }}
-/>;
-```
-
-<img src=https://user-images.githubusercontent.com/1709072/140698774-bdbfee64-d403-4e49-9a85-716d44783cfd.png height=500> <img src=https://user-images.githubusercontent.com/1709072/140849895-dada3f51-74c0-4685-b5d6-c1b69a4d06bb.PNG height=500>
-
-### 监听地图事件
-
-```jsx
-import { MapView } from "react-native-amap3d";
-
-<MapView
-  onLoad={() => console.log("onLoad")}
-  onPress={({ nativeEvent }) => console.log(nativeEvent)}
-  onCameraIdle={({ nativeEvent }) => console.log(nativeEvent)}
-/>;
-```
-
-<img src=https://user-images.githubusercontent.com/1709072/140705501-9ed3e038-e52a-48c2-a98a-235c5c890549.png height=500> <img src=https://user-images.githubusercontent.com/1709072/140849894-3add3858-fc7f-47cd-9786-94aeef399ebc.PNG height=500>
-
-### 添加标记
-
-其中 `icon` 支持 [ImageSource](https://reactnative.dev/docs/image#imagesource)。
-
-同时支持 `children` 作为标记图标。
-
-```jsx
-import { MapView, Marker } from "react-native-amap3d";
-
-<MapView>
-  <Marker
-    position={{ latitude: 39.806901, longitude: 116.397972 }}
-    icon={require("../images/flag.png")}
-    onPress={() => alert("onPress")}
-  />
-  <Marker
-    position={{ latitude: 39.806901, longitude: 116.297972 }}
-    icon={{
-      uri: "https://reactnative.dev/img/pwa/manifest-icon-512.png",
-      width: 64,
-      height: 64,
+function AMapDemo() {
+  return (
+    <View style={styles.container}>
+		<MapView 
+    mapType={1}
+    myLocationEnabled = {true}
+    onPress={(event: ReactNative.NativeSyntheticEvent<LatLng>)=>{
+      console.info("AMapViewEventType map3d demo " + event.nativeEvent.latitude + "===" + event.nativeEvent.longitude)
     }}
-  />
-  <Marker position={{ latitude: 39.906901, longitude: 116.397972 }}>
-    <Text
-      style={{
-        color: "#fff",
-        backgroundColor: "#009688",
-        alignItems: "center",
-        borderRadius: 5,
-        padding: 5,
-      }}
-    >
-      {new Date().toLocaleString()}
-    </Text>
-  </Marker>
-</MapView>;
+    onLongPress={(event: ReactNative.NativeSyntheticEvent<LatLng>)=>{
+      console.info("AMapViewEventType map3d demo longevent===" + event.nativeEvent.latitude + "===" + event.nativeEvent.longitude)
+    }}
+    onCameraMove={(event: ReactNative.NativeSyntheticEvent<CameraPosition>)=>{
+      console.info("AMapViewEventType map3d demo " + event.nativeEvent.targetInfo?.latitude + "===" + event.nativeEvent.targetInfo?.longitude)
+    }}
+    onCameraIdle={(event: ReactNative.NativeSyntheticEvent<CameraPosition>)=>{
+      console.info("AMapViewEventType map3d demo " + event.nativeEvent.targetInfo?.latitude + "===" + event.nativeEvent.targetInfo?.longitude)
+    }}
+    onLoad={(event: ReactNative.NativeSyntheticEvent<voidEvent>) => {
+      Alert.alert("onLoad successful")
+    }}
+    > 
+    <Circle
+      strokeWidth={5}
+      strokeColor="rgba(0, 0, 255, 0.5)"
+      fillColor="rgba(255, 0, 0, 0.5)"
+      radius={500}
+      center={{ latitude: 39.906901, longitude: 116.397972 }}
+    />
+    <Circle
+      strokeWidth={10}
+      strokeColor="rgba(22, 69, 55, 0.5)"
+      fillColor="rgba(36, 21, 36, 0.5)"
+      radius={500}
+      center={{ latitude: 39.966901, longitude: 116.397972 }}
+    />
+    <Polygon
+      strokeWidth={5}
+      strokeColor="rgba(0, 0, 255, 0.5)"
+      fillColor="rgba(255, 0, 0, 0.5)"
+      points={points}
+    />
+    <Polygon
+      strokeWidth={10}
+      strokeColor="rgba(95, 36, 202, 0.5)"
+      fillColor="rgba(255, 235, 123, 0.5)"
+      points={points2}
+    />
+    <Polyline width={100}  color="rgba(0, 255, 0, 0.5)" points={line1} onPress={() => { console.info("AMapViewEventType map3d polyline onPress width 200")}} />
+    <Polyline
+      width={100}
+      colors={["#f44336", "#4caf50", "#00ff23"]}
+      points={line3}
+    />
+    <Marker
+      draggable
+      position={{ latitude: 39.806901, longitude: 116.397972 }}
+      onPress={() => Alert.alert("onPress")}
+      onDragEnd={({ nativeEvent }) =>
+        Alert.alert(`onDragEnd: ${nativeEvent.latitude}, ${nativeEvent.longitude}`)}
+    />
+    </MapView>
+	</View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#fff',
+    flex: 1,
+    paddingTop: 24,
+  }
+});
+export default AMapDemo;
 ```
 
-<img src=https://user-images.githubusercontent.com/1709072/140707579-4abe070a-3fc1-481d-8a2e-91ac2ad8bdc7.png height=500> <img src=https://user-images.githubusercontent.com/1709072/140849886-7eb9322b-8fa8-4049-a7b0-3eb36d006992.PNG height=500>
+## Link
 
-### 点聚合
+目前HarmonyOS暂不支持 AutoLink，所以 Link 步骤需要手动配置。
 
-Marker 数量过多（尤其是使用自定义 View 的情况下）会导致性能问题，而且显示过于密集，这时候可以用点聚合改善。
+首先需要使用 DevEco Studio 打开项目里的HarmonyOS工程 `harmony`
 
-```jsx
-import { Cluster, MapView, Marker } from "react-native-amap3d";
+### 在工程根目录的 `oh-package.json` 添加 overrides 字段
 
-const markers = Array(1000)
-  .fill(0)
-  .map((_, i) => ({
-    position: { latitude: 39.5 + Math.random(), longitude: 116 + Math.random() },
-    properties: { key: `Marker${i}` },
-  }));
-
-<MapView
-  ref={(ref) => (this.mapView = ref)}
-  onLoad={() => this.mapView?.moveCamera({ zoom: 8 }, 100)}
-  onCameraIdle={({ nativeEvent }) => {
-    this.status = nativeEvent;
-    this.cluster?.update(nativeEvent);
-  }}
->
-  <Cluster
-    ref={(ref) => (this.cluster = ref)}
-    points={markers}
-    renderMarker={(item) => (
-      <Marker
-        key={item.properties.key}
-        icon={require("../images/flag.png")}
-        position={item.position}
-      />
-    )}
-  />
-</MapView>;
+```json
+{
+  ...
+  "overrides": {
+    "@rnoh/react-native-openharmony" : "./react_native_openharmony"
+  }
+}
 ```
 
-<img src=https://user-images.githubusercontent.com/1709072/140710764-40f767cd-74fd-47ca-8310-897bbf58fbbd.png height=500> <img src=https://user-images.githubusercontent.com/1709072/140849888-6b6609c1-2e55-41c2-bdc3-f9d3fcc7a112.PNG height=500>
+### 引入原生端代码
 
-<img src=https://user-images.githubusercontent.com/1709072/140710758-63e81ade-2635-4412-a5fa-b6948605fe75.png height=500> <img src=https://user-images.githubusercontent.com/1709072/140849880-9eb7609d-55a7-43be-8b6a-bac725fb0a82.PNG height=500>
+目前有两种方法：
 
-### 更多示例
+1. 通过 har 包引入（在 IDE 完善相关功能后该方法会被遗弃，目前首选此方法）；
+2. 直接链接源码。
 
-参考 [example](https://github.com/qiuxiang/react-native-amap3d/tree/master/example-app)。
+方法一：通过 har 包引入（推荐）
 
-## 常见问题
+> [!TIP] har 包位于三方库安装路径的 `harmony` 文件夹下。
 
-- 尽量使用真实设备进行测试，在模拟器可能存在一些问题（常见的是 Android 模拟器因为缺少 GPU 加速而导致闪退）。
-- onLocation 没有返回定位数据通常是因为 key 不正确，或没有申请 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION 权限
+打开 `entry/oh-package.json5`，添加以下依赖
 
-[npm]: https://www.npmjs.com/package/react-native-amap3d
-[version-badge]: https://img.shields.io/npm/v/react-native-amap3d.svg
+```json
+"dependencies": {
+    "@rnoh/react-native-openharmony": "file:../react_native_openharmony",
+    "@react-native-oh-tpl/react-native-amap3d": "file:../../node_modules/@react-native-oh-tpl/react-native-amap3d/harmony/rn_amap3d.har"
+  }
+```
+
+点击右上角的 `sync` 按钮
+
+或者在终端执行：
+
+```bash
+cd entry
+ohpm install
+```
+
+方法二：直接链接源码
+
+> [!TIP] 如需使用直接链接源码，请参考[直接链接源码说明](/zh-cn/link-source-code.md)
+
+### 配置 CMakeLists 和引入 MapViewPackge
+
+打开 `entry/src/main/cpp/CMakeLists.txt`，添加：
+
+```diff
+project(rnapp)
+cmake_minimum_required(VERSION 3.4.1)
+set(CMAKE_SKIP_BUILD_RPATH TRUE)
+set(RNOH_APP_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(NODE_MODULES "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../node_modules")
++ set(OH_MODULES "${CMAKE_CURRENT_SOURCE_DIR}/../../../oh_modules")
+set(RNOH_CPP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../../../../react-native-harmony/harmony/cpp")
+set(LOG_VERBOSITY_LEVEL 1)
+set(CMAKE_ASM_FLAGS "-Wno-error=unused-command-line-argument -Qunused-arguments")
+set(CMAKE_CXX_FLAGS "-fstack-protector-strong -Wl,-z,relro,-z,now,-z,noexecstack -s -fPIE -pie")
+set(WITH_HITRACE_SYSTRACE 1) # for other CMakeLists.txt files to use
+add_compile_definitions(WITH_HITRACE_SYSTRACE)
+
+add_subdirectory("${RNOH_CPP_DIR}" ./rn)
+
+# RNOH_BEGIN: manual_package_linking_1
+add_subdirectory("../../../../sample_package/src/main/cpp" ./sample-package)
++ add_subdirectory("${OH_MODULES}/@react-native-oh-tpl/react-native-amap3d/src/main/cpp" ./rn_amap3d)
+# RNOH_END: manual_package_linking_1
+
+file(GLOB GENERATED_CPP_FILES "./generated/*.cpp")
+
+add_library(rnoh_app SHARED
+    ${GENERATED_CPP_FILES}
+    "./PackageProvider.cpp"
+    "${RNOH_CPP_DIR}/RNOHAppNapiBridge.cpp"
+)
+target_link_libraries(rnoh_app PUBLIC rnoh)
+
+# RNOH_BEGIN: manual_package_linking_2
+target_link_libraries(rnoh_app PUBLIC rnoh_sample_package)
++ target_link_libraries(rnoh_app PUBLIC rnoh_amap3d)
+# RNOH_END: manual_package_linking_2
+```
+
+打开 `entry/src/main/cpp/PackageProvider.cpp`，添加：
+
+```diff
+#include "RNOH/PackageProvider.h"
+#include "generated/RNOHGeneratedPackage.h"
+#include "SamplePackage.h"
++ #include "MapViewPackage.h"
+
+using namespace rnoh;
+
+std::vector<std::shared_ptr<Package>> PackageProvider::getPackages(Package::Context ctx) {
+    return {
+        std::make_shared<RNOHGeneratedPackage>(ctx),
+        std::make_shared<SamplePackage>(ctx),
++       std::make_shared<MapViewPackage>(ctx)
+    };
+}
+```
+
+
+### 在 ArkTs 侧引入 react-native-amap3d 组件
+
+找到 `function buildCustomRNComponent()`，一般位于 `entry/src/main/ets/pages/index.ets` 或 `entry/src/main/ets/rn/LoadBundle.ets`，添加：
+
+```diff
+...
++ import {
++  A_MAP_CIRCLE_VIEW_TYPE,
++  A_MAP_MARKER_TYPE,
++  A_MAP_POLYGON_TYPE,
++  A_MAP_POLYLINE_TYPE,
++  AMapCircle,
++  AMapMarker,
++  AMapPolygon,
++  AMapPolyline,
++  AMapView,
++  GOADE_MAP_VIEW_TYPE
++} from '@react-native-oh-tpl/react-native-amap3d';
+
+@Builder
+export function buildCustomRNComponent(ctx: ComponentBuilderContext) {
+...
++    if (ctx.componentName === GOADE_MAP_VIEW_TYPE) {
++      AMapView({
++        ctx: ctx.rnComponentContext,
++        tag: ctx.tag,
++      })
++    }
++    if (ctx.componentName === A_MAP_CIRCLE_VIEW_TYPE) {
++      AMapCircle({
++        ctx: ctx.rnComponentContext,
++        tag: ctx.tag,
++      })
++    }
++    if (ctx.componentName === A_MAP_MARKER_TYPE) {
++      AMapMarker({
++        ctx: ctx.rnComponentContext,
++        tag: ctx.tag,
++      })
++    }
++    if (ctx.componentName === A_MAP_POLYGON_TYPE) {
++      AMapPolygon({
++        ctx: ctx.rnComponentContext,
++        tag: ctx.tag,
++      })
++    }
++    if (ctx.componentName === A_MAP_POLYLINE_TYPE) {
++      AMapPolyline({
++        ctx: ctx.rnComponentContext,
++        tag: ctx.tag,
++      })
++    }
+...
+}
+...
+```
+
+> [!TIP] 本库使用了混合方案，需要添加组件名。
+
+在`entry/src/main/ets/pages/index.ets` 或 `entry/src/main/ets/rn/LoadBundle.ets` 找到常量 `arkTsComponentNames` 在其数组里添加组件名
+
+```diff
+const arkTsComponentNames: Array<string> = [
+  SampleView.NAME,
+  GeneratedSampleView.NAME,
+  PropsDisplayer.NAME,
++  A_MAP_CIRCLE_VIEW_TYPE,
++  A_MAP_MARKER_TYPE,
++  A_MAP_POLYGON_TYPE,
++  A_MAP_POLYLINE_TYPE,
++  GOADE_MAP_VIEW_TYPE
+  ];
+```
+
+### 在 ArkTs 侧引入 MapViewPackage
+
+打开 `entry/src/main/ets/RNPackagesFactory.ts`，添加：
+
+```diff
+...
++ import {MapViewPackage} from '@react-native-oh-tpl/react-native-amap3d/ts';
+
+export function createRNPackages(ctx: RNPackageContext): RNPackage[] {
+  return [
+    new SamplePackage(ctx),
++   new MapViewPackage(ctx)
+  ];
+}
+```
+
+### 运行
+
+点击右上角的 `sync` 按钮
+
+或者在终端执行：
+
+```bash
+cd entry
+ohpm install
+```
+
+然后编译、运行即可。
+
+## 约束与限制
+
+### 兼容性
+
+要使用此库，需要使用正确的 React-Native 和 RNOH 版本。另外，还需要使用配套的 DevEco Studio 和 手机 ROM。
+
+请到三方库相应的 Releases 发布地址查看 Release 配套的版本信息：[@react-native-oh-tpl/react-native-amap3d Releases](https://github.com/react-native-oh-library/react-native-amap3d/releases)
+
+
+## 属性
+
+> [!tip] "Platform"列表示该属性在原三方库上支持的平台。
+
+> [!tip] "HarmonyOS Support"列为 yes 表示 HarmonyOS 平台支持该属性；no 则表示不支持；partially 表示部分支持。使用方法跨平台一致，效果对标 iOS 或 Android 的效果。
+### MapView
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| mapType  | 地图类型         | int  | yes | ios      | yes |
+| initialCameraPosition  | 初始状态         | CameraPosition  | yes | ios      | yes |
+| myLocationEnabled  | 是否显示当前定位         | boolean  | yes | ios      | yes |
+| indoorViewEnabled  | 是否显示室内地图         | boolean  | yes | ios      | no |
+| buildingsEnabled  | 是否显示3D建筑         | boolean  | yes | ios      | yes |
+| labelsEnabled  | 是否显示标注         | boolean  | yes | ios      | yes |
+| compassEnabled  | 是否显示指南针         | boolean  | yes | ios      | no |
+| zoomControlsEnabled  | 是否显示放大缩小按钮         | boolean  | yes | ios      | no |
+| scaleControlsEnabled  | 是否显示比例尺         | boolean  | yes | ios      | no |
+| trafficEnabled  | 是否显示路况         | boolean  | yes | ios      | yes |
+| maxZoom  | 最大缩放级别         | float  | yes | ios      | yes |
+| minZoom  | 最小缩放级别         | float  | yes | ios      | yes |
+| zoomGesturesEnabled  | 是否启用缩放手势，用于放大缩小         | boolean  | yes | ios      | yes |
+| scrollGesturesEnabled  | 是否启用滑动手势，用于平移         | boolean  | yes | ios      | yes |
+| rotateGesturesEnabled  | 是否启用旋转手势，用于调整方向         | boolean  | yes | ios      | yes |
+| tiltGesturesEnabled  | 是否启用倾斜手势，用于改变视角         | boolean  | yes | ios      | yes |
+| distanceFilter  | 设定定位的最小更新距离         | float  | yes | ios      | yes|
+| headingFilter  | 设定最小更新角度，默认为 1 度         | float  | yes | ios      | no |
+
+### Circle
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| center  | 圆点坐标         | LatLng  | yes | ios      | yes |
+| radius  | 半径（米）         | Float  | yes | ios      | yes |
+| strokeWidth  | 边线宽度         | Float  | yes | ios      | yes |
+| strokeColor  | 边线颜色         | string  | yes | ios      | yes |
+| fillColor  | 填充颜色         | string  | yes | ios      | yes |
+| zIndex  | 层级         | Float  | yes | ios      | yes |
+
+### Marker
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| position  | 坐标         | LatLng  | yes | ios      | yes |
+| icon  | 图标         | ImageSourcePropType  | yes | ios      | no |
+| draggable  | 是否可拖拽         | boolean  | yes | ios      | yes |
+| flat  | 是否平贴地图         | boolean  | yes | ios      | yes |
+| zIndex  | 层级         | Float  | yes | ios      | yes |
+| anchor  | 覆盖物锚点比例         | Point  | yes | ios      | yes |
+| centerOffset  | 覆盖物偏移位置         | Float  | yes | ios      | yes |
+
+### Polygon
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| points  | 节点坐标         | LatLng[]  | yes | ios      | yes |
+| strokeWidth  | 边线宽度         | Float  | yes | ios      | yes |
+| strokeColor  | 边线颜色         | string  | yes | ios      | yes |
+| fillColor  | 填充颜色         | string  | yes | ios      | yes |
+| zIndex  | 层级         | Float  | yes | ios      | yes |
+
+### Polyline
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| points  | 节点坐标         | LatLng[]  | yes | ios      | yes |
+| width  | 边线宽度         | Float  | yes | ios      | yes |
+| color  | 线段颜色         | ColorValue  | yes | ios      | yes |
+| zIndex  | 层级         | Float  | yes | ios      | yes |
+| colors  | 多段颜色        | ColorValue[]  | yes | ios      | yes |
+| gradient  | 是否使用颜色渐变        | boolean  | yes | ios      | yes |
+| geodesic  | 是否绘制大地线        | boolean  | yes | ios      | yes |
+| dotted  | 是否绘制虚线        | boolean  | yes | ios      | yes |
+
+## 静态方法
+
+> [!tip] "Platform"列表示该属性在原三方库上支持的平台。
+
+> [!tip] "HarmonyOS Support"列为 yes 表示 HarmonyOS 平台支持该属性；no 则表示不支持；partially 表示部分支持。使用方法跨平台一致，效果对标 iOS 或 Android 的效果。
+### MapView
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| onPress  | 点击事件        | LatLng | yes | ios      | yes |
+| onPressPoi  | 标注点击事件        | Poi | yes | ios      | yes |
+| onLongPress  | 长按事件        | LatLng | yes | ios      | yes |
+| onCameraMove  | 地图状态改变事件，随地图状态变化不停地触发        | CameraEvent | yes | ios      | partially |
+| onCameraIdle  | 地图状态改变事件，在停止变化后触发        | CameraEvent | yes | ios      | partially |
+| onLoad  | 地图初始化完成事件        | void | yes | ios      | yes |
+| onLocation  | 地图定位更新事件        | GeolocationPosition | no | ios      | no |
+| onCallback  | 回调事件        | void | yes | ios      | no |
+| moveCamera  | 移动视角        | void | yes | ios      | no |
+| call  | 调用        | void | yes | ios      | no |
+
+
+### Marker
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| onPress  | 点击事件        | void | yes | ios      | yes |
+| onDragStart  | 拖放开始事件        | void | yes | ios      | yes |
+| onDrag  | 拖放进行事件，类似于mousemove，在结束之前会不断调用        | void | yes | ios      | yes |
+| onDragEnd  | 拖放结束事件        | LatLng | yes | ios      | yes |
+| update  | 触发自定义view更新        | void | yes | ios      | no |
+
+### Polyline
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| onPress  | 点击事件        | void | yes | ios      | yes |
+
+## API
+
+> [!tip] "Platform"列表示该属性在原三方库上支持的平台。
+
+> [!tip] "HarmonyOS Support"列为 yes 表示 HarmonyOS 平台支持该属性；no 则表示不支持；partially 表示部分支持。使用方法跨平台一致，效果对标 iOS 或 Android 的效果。
+
+| Name | Description | Type | Required | Platform | HarmonyOS Support  |
+| ---- | ----------- | ---- | -------- | -------- | ------------------ |
+| initSDK  | 初始化高德SDK         | void  | yes | ios      | no |
+| getVersion  | 获取版本信息         | Promise<string>  | yes | ios      | no |
+
+## 遗留问题
+- [ ] initSDK：hramony暂不支持: [issue#16](https://github.com/react-native-oh-library/react-native-amap3d/issues/16)
+- [ ] getVersion：hramony暂不支持: [issue#17](https://github.com/react-native-oh-library/react-native-amap3d/issues/17)
+### MapView
+- [ ] indoorViewEnabled：高德SDK暂不支持: [issue#6](https://github.com/react-native-oh-library/react-native-amap3d/issues/6)
+- [ ] compassEnabled：高德SDK暂不支持: [issue#7](https://github.com/react-native-oh-library/react-native-amap3d/issues/7)
+- [ ] zoomControlsEnabled：高德SDK暂不支持: [issue#8](https://github.com/react-native-oh-library/react-native-amap3d/issues/8)
+- [ ] scaleControlsEnabled：高德SDK暂不支持: [issue#9](https://github.com/react-native-oh-library/react-native-amap3d/issues/9)
+- [ ] distanceFilter：高德SDK暂不支持: [issue#11](https://github.com/react-native-oh-library/react-native-amap3d/issues/11)
+- [ ] headingFilter：高德SDK暂不支持: [issue#12](https://github.com/react-native-oh-library/react-native-amap3d/issues/12)
+- [ ] onCameraMove: 高德SDK部分支持： [issue#14](https://github.com/react-native-oh-library/react-native-amap3d/issues/14)
+- [ ] onCameraIdle: 高德SDK部分支持: [issue#15](https://github.com/react-native-oh-library/react-native-amap3d/issues/15)
+- [ ] onLocation：高德SDK暂不支持: [issue#10](https://github.com/react-native-oh-library/react-native-amap3d/issues/10)
+- [ ] onCallback：高德SDK部分支持: [issue#21](https://github.com/react-native-oh-library/react-native-amap3d/issues/21)
+- [ ] moveCamera：harmony暂不支持: [issue#19](https://github.com/react-native-oh-library/react-native-amap3d/issues/19)
+- [ ] call：harmony暂不支持: [issue#5](https://github.com/react-native-oh-library/react-native-amap3d/issues/5)
+
+### Marker
+- [ ] icon：高德SDK暂不支持: [issue#20](https://github.com/react-native-oh-library/react-native-amap3d/issues/20)
+- [ ] update：harmony暂不支持: [issue#18](https://github.com/react-native-oh-library/react-native-amap3d/issues/18)
+### Cluster
+- [ ] Cluster：高德SDK暂不支持添加该组件: [issue#2](https://github.com/react-native-oh-library/react-native-amap3d/issues/2)
+### HeatMap
+- [ ] HeatMap：高德SDK暂不支持添加该组件: [issue#3](https://github.com/react-native-oh-library/react-native-amap3d/issues/3)
+### MultiPoint
+- [ ] MultiPoint：高德SDK暂不支持添加该组件: [issue#4](https://github.com/react-native-oh-library/react-native-amap3d/issues/4)
+
+
+## 其他
+
+## 开源协议
+
+本项目基于 [MIT License (MIT)](https://github.com/qiuxiang/react-native-amap3d/blob/main/license) ，请自由地享受和参与开源。
+<!--{%endraw%}-->

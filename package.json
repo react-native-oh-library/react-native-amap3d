@@ -1,7 +1,7 @@
 {
-  "name": "react-native-amap3d",
-  "version": "0.0.0",
-  "description": "react-native 高德地图组件，支持 HarmonyOS",
+  "name": "@react-native-oh-tpl/react-native-amap3d",
+  "version": "0.0.0-0.0.1",
+  "description": "react-native 高德地图组件，支持 harmonyOS",
   "license": "MIT",
   "keywords": [
     "react-native",
@@ -13,7 +13,8 @@
   "files": [
     "lib/src",
     "react-native.config.js",
-    "react-native-amap3d.podspec"
+    "react-native-amap3d.podspec",
+    "harmony"
   ],
   "homepage": "https://github.com/qiuxiang/react-native-amap3d",
   "repository": {
@@ -22,10 +23,17 @@
   },
   "scripts": {
     "start": "react-native start",
-    "reload": "adb reverse tcp:8081 tcp:8081 && adb shell input text rr",
+    "reload": "adb reverse tcp:8081 tcp:8081 && adb shell input text rr"
+  },
+  "harmony": {
+    "alias": "react-native-amap3d"
+  },
+  "overrides": {
+    "@react-native/codegen": "0.74.0"
   },
   "dependencies": {
-    "supercluster": "^7.1.4"
+    "supercluster": "^7.1.4",
+    "react-native-amap3d": "0.0.0"
   },
   "devDependencies": {
     "@react-native-picker/picker": "^2.4.8",

@@ -1,0 +1,11 @@
+[
+    {
+        "Name": "react-native-amap3d",
+        "License": "MIT License",
+        "License File": "https://github.com/qiuxiang/react-native-amap3d/blob/main/license",
+        "Version Number": "0.0.0",
+        "Owner" : "xiafeng@huawei.com",
+        "Upstream URL": "https://github.com/qiuxiang/react-native-amap3d",
+        "Description": "react-native 高德地图组件，使用最新 3D SDK，受 react-native-maps 启发，提供功能丰富且易用的接口。"
+    }
+]
