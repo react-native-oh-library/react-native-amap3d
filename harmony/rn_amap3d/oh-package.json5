@@ -1,0 +1,16 @@
+{
+  "types": "",
+  "devDependencies": {
+  },
+  "name": "@react-native-oh-tpl/react-native-amap3d",
+  "version": "3.2.4-0.0.1",
+  "description": "Please describe the basic information.",
+  "main": "index.ets",
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@rnoh/react-native-openharmony": "file:../react_native_openharmony",
+    "@amap/amap_lbs_map3d": ">=1.0.3",
+    "@amap/amap_lbs_common": ">=1.0.0",
+  }
+}
