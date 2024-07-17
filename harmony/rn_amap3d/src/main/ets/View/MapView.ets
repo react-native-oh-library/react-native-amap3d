@@ -60,8 +60,8 @@ export struct AMapView {
   ctx!: RNOHContext
   tag: number = -1
   type: string = ""
-  polyLineTag: number = -1
-  markerTag: number = -1
+  polyLineTag: Array<number> = []
+  markerTag: Array<number> = []
   @State gDMapDescriptor: GDMapViewDescriptor = {} as GDMapViewDescriptor
   private unregisterDescriptorChangesListener?: () => void = undefined
   //覆盖物
@@ -97,6 +97,7 @@ export struct AMapView {
   labelsEnabled: boolean = false;
   zoomControlsEnabled: boolean = false;
   scaleControlsEnabled: boolean = false;
+  myLocationButtonEnabled: boolean = false;
   distanceFilter: number = 1;
   headingFilter: number = 1;
   trafficEnabled: boolean = false;
@@ -129,10 +130,11 @@ export struct AMapView {
       LatLng: point
     })
   }
-  onPressPoiFunction(poi:Poi){
+
+  onPressPoiFunction(poi: Poi) {
     this.ctx.rnInstance.emitComponentEvent(this.gDMapDescriptor.tag, MAP_SHOW_FUNC, {
       type: 'onPressPoi',
-      Poi:poi
+      Poi: poi
     })
   }
 
@@ -157,33 +159,32 @@ export struct AMapView {
     })
   }
 
-
-  onPolyLineClickFunction(): void {
-    this.ctx.rnInstance.emitComponentEvent(this.polyLineTag, A_MAP_POLYLINE_TYPE, {
+  onPolyLineClickFunction(num: number): void {
+    this.ctx.rnInstance.emitComponentEvent(this.polyLineTag[num], A_MAP_POLYLINE_TYPE, {
       type: 'onPress'
     })
   }
 
-  onMarkerClickFunction(): void {
-    this.ctx.rnInstance.emitComponentEvent(this.markerTag, A_MAP_MARKER_TYPE, {
+  onMarkerClickFunction(num: number): void {
+    this.ctx.rnInstance.emitComponentEvent(this.markerTag[num], A_MAP_MARKER_TYPE, {
       type: 'onPress'
     })
   }
 
-  onMarkerDragStartFunction(): void {
-    this.ctx.rnInstance.emitComponentEvent(this.markerTag, A_MAP_MARKER_TYPE, {
+  onMarkerDragStartFunction(num: number): void {
+    this.ctx.rnInstance.emitComponentEvent(this.markerTag[num], A_MAP_MARKER_TYPE, {
       type: 'onDragStart'
     })
   }
 
-  onMarkerDragFunction(): void {
-    this.ctx.rnInstance.emitComponentEvent(this.markerTag, A_MAP_MARKER_TYPE, {
+  onMarkerDragFunction(num: number): void {
+    this.ctx.rnInstance.emitComponentEvent(this.markerTag[num], A_MAP_MARKER_TYPE, {
       type: 'onDrag'
     })
   }
 
-  onMarkerDragEndFunction(point: LatLng): void {
-    this.ctx.rnInstance.emitComponentEvent(this.markerTag, A_MAP_MARKER_TYPE, {
+  onMarkerDragEndFunction(point: LatLng, num: number): void {
+    this.ctx.rnInstance.emitComponentEvent(this.markerTag[num], A_MAP_MARKER_TYPE, {
       type: 'onDragEnd',
       LatLng: point
     })
@@ -240,6 +241,10 @@ export struct AMapView {
           uiSettings?.setScrollGesturesEnabled(this.scrollGesturesEnabled);
           uiSettings?.setRotateGesturesEnabled(this.rotateGesturesEnabled);
           uiSettings?.setTiltGesturesEnabled(this.tiltGesturesEnabled);
+          uiSettings?.setScaleControlsEnabled(this.scaleControlsEnabled);
+          uiSettings?.setCompassEnabled(this.compassEnabled);
+          uiSettings?.setMyLocationButtonEnabled(this.myLocationButtonEnabled);
+          uiSettings?.setZoomControlsEnabled(this.zoomControlsEnabled);
           Logger.debug(`GaoDemap props settings finished`);
           this.onLoadFunction();
         }
@@ -261,25 +266,45 @@ export struct AMapView {
           }
         }
         this.aMap?.setOnPolylineClickListener((polyLine: Polyline): void => {
-          this.onPolyLineClickFunction()
+          for (let index = 0; index < this.polylineOption.length; ++index) {
+            if (polyLine.getOptions() == this.polylineOption[index]) {
+              this.onPolyLineClickFunction(index)
+            }
+          }
         });
 
         for (let index = 0; index < this.markerOption.length; ++index) {
           this.aMap?.addMarker(this.markerOption[index]);
         }
         this.aMap?.setOnMarkerClickListener((marker: Marker): boolean => {
-          this.onMarkerClickFunction()
+          for (let index = 0; index < this.markerOption.length; ++index) {
+            if (marker.getOptions() == this.markerOption[index]) {
+              this.onMarkerClickFunction(index)
+            }
+          }
           return true;
         });
         this.aMap?.setOnMarkerDragListener(new OnMarkerDragListener(
           (DragStart: Marker) => {
-            this.onMarkerDragStartFunction()
+            for (let index = 0; index < this.markerOption.length; ++index) {
+              if (DragStart.getOptions() == this.markerOption[index]) {
+                this.onMarkerDragStartFunction(index)
+              }
+            }
           },
           (Drag: Marker) => {
-            this.onMarkerDragFunction()
+            for (let index = 0; index < this.markerOption.length; ++index) {
+              if (Drag.getOptions() == this.markerOption[index]) {
+                this.onMarkerDragFunction(index)
+              }
+            }
           },
           (DragEnd: Marker) => {
-            this.onMarkerDragEndFunction(DragEnd.getPosition())
+            for (let index = 0; index < this.markerOption.length; ++index) {
+              if (DragEnd.getOptions() == this.markerOption[index]) {
+                this.onMarkerDragEndFunction(DragEnd.getPosition(), index)
+              }
+            }
           })
         )
       })
@@ -318,6 +343,10 @@ export struct AMapView {
     //是否显示放大缩小按钮
     if (descriptor.props.zoomControlsEnabled != null) {
       this.zoomControlsEnabled = descriptor.props.zoomControlsEnabled;
+    }
+
+    if (descriptor.props.myLocationButtonEnabled != null) {
+      this.myLocationButtonEnabled = descriptor.props.myLocationButtonEnabled;
     }
     //是否显示比例尺
     if (descriptor.props.scaleControlsEnabled != null) {
@@ -398,7 +427,7 @@ export struct AMapView {
         case A_MAP_POLYLINE_TYPE:
         // add polyline
           let polylineOptions = new PolylineOptions();
-          this.polyLineTag = this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag;
+          this.polyLineTag.push(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag);
           let mapPolylineProp =
             this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).props as AMapPolylineProps;
           polylineOptions.setZIndex(mapPolylineProp.zIndex ? mapPolylineProp.zIndex : 1);
@@ -430,7 +459,7 @@ export struct AMapView {
           let markerOptions = new MarkerOptions();
           let mapMarkerProps =
             this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).props as AMapMarkerProps;
-          this.markerTag = this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag;
+          this.markerTag.push(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag);
           markerOptions.setPosition(new LatLng(mapMarkerProps.position.latitude,
             mapMarkerProps.position.longitude));
           markerOptions.setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
