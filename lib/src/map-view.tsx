@@ -12,10 +12,6 @@ export default class MapView extends Component<MapViewProps> {
     return (
       <AMapView
         {...this.props}
-        // ref={(ref) => (this.ref = ref)}
-        // style={style}
-        // // @ts-ignore: 内部接口
-        // onCallback={this.callback}
         onPress={(event: ReactNative.NativeSyntheticEvent<LatLng>) => {
           console.info("AMapViewEventType map3d demo 10.11")
           if (event.nativeEvent.latitude) {
@@ -30,13 +26,13 @@ export default class MapView extends Component<MapViewProps> {
         }}
         onCameraMove={(event: ReactNative.NativeSyntheticEvent<CameraPosition>) => {
           console.info("AMapViewEventType map3d demo Move start event")
-          if (event.nativeEvent.targetInfo?.latitude) {
+          if (event.nativeEvent.target?.latitude) {
             this.props.onCameraMove?.call(this, event);
           }
         }}
         onCameraIdle={(event: ReactNative.NativeSyntheticEvent<CameraPosition>) => {
           console.info("AMapViewEventType map3d demo Move end event")
-          if (event.nativeEvent.targetInfo?.latitude) {
+          if (event.nativeEvent.target?.latitude) {
             this.props.onCameraIdle?.call(this, event);
           }
         }}

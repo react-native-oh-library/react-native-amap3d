@@ -41,7 +41,7 @@ export type CameraPosition = Readonly<{
     /**
      * 中心坐标
      */
-    targetInfo?: {
+    target?: {
         latitude: Float;
         longitude: Float;
     }
@@ -69,6 +69,8 @@ export type Location = Readonly<{
     altitude: Float;
     heading: Float;
     speed: Float;
+    latitude: Float;
+    longitude: Float;
 }>
 
 export interface MapViewProps extends ViewProps {

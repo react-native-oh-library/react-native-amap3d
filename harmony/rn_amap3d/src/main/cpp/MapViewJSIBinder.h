@@ -32,7 +32,7 @@ class MapViewJSIBinder : public ViewComponentJSIBinder {
     facebook::jsi::Object createDirectEventTypes(facebook::jsi::Runtime &rt) override {
         facebook::jsi::Object events(rt);
         events.setProperty(rt, "topPress", createDirectEvent(rt, "onPress"));
-        events.setProperty(rt, "topPressPoiEvent", createDirectEvent(rt, "onPressPoi"));
+        events.setProperty(rt, "topPressPoi", createDirectEvent(rt, "onPressPoi"));
         events.setProperty(rt, "topLongPress", createDirectEvent(rt, "onLongPress"));
         events.setProperty(rt, "topCameraMove", createDirectEvent(rt, "onCameraMove"));
         events.setProperty(rt, "topCameraIdle", createDirectEvent(rt, "onCameraIdle"));

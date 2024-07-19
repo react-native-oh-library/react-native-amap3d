@@ -35,7 +35,7 @@ void MapViewEventEmitter::onPress(struct onPressEvent event) const {
     });
 }
 void MapViewEventEmitter::onPressPoi(struct onMapPoiEvent event) const {
-    dispatchEvent("pressPoiEvent", [event = std::move(event)](jsi::Runtime &runtime) {
+    dispatchEvent("PressPoi", [event = std::move(event)](jsi::Runtime &runtime) {
         auto payload = jsi::Object(runtime);
         payload.setProperty(runtime, "id", event.id);
         payload.setProperty(runtime, "name", event.name);
