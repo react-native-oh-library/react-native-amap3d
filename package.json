@@ -26,13 +26,7 @@
     "reload": "adb reverse tcp:8081 tcp:8081 && adb shell input text rr"
   },
   "harmony": {
-    "codegenConfig": {
-      "specPaths":["./lib/src"]
-    },
     "alias": "react-native-amap3d"
-  },
-  "overrides": {
-    "@react-native/codegen": "0.74.0"
   },
   "dependencies": {
     "supercluster": "^7.1.4",
