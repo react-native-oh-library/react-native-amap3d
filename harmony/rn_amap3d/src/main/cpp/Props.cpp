@@ -12,6 +12,7 @@ MapViewProps::MapViewProps(const PropsParserContext &context, const MapViewProps
       myLocationEnabled(convertRawProp(context, rawProps, "myLocationEnabled", sourceProps.myLocationEnabled, false)),
       indoorViewEnabled(convertRawProp(context, rawProps, "indoorViewEnabled", sourceProps.indoorViewEnabled, false)),
       buildingsEnabled(convertRawProp(context, rawProps, "buildingsEnabled", sourceProps.buildingsEnabled, false)),
+      labelsEnabled(convertRawProp(context, rawProps, "labelsEnabled", sourceProps.labelsEnabled, false)),
       compassEnabled(convertRawProp(context, rawProps, "compassEnabled", sourceProps.compassEnabled, false)),
       zoomControlsEnabled(
           convertRawProp(context, rawProps, "zoomControlsEnabled", sourceProps.zoomControlsEnabled, false)),
@@ -37,7 +38,7 @@ CircleProps::CircleProps(const PropsParserContext &context, const CircleProps &s
       strokeWidth(convertRawProp(context, rawProps, "strokeWidth", sourceProps.strokeWidth, 1.f)),
       strokeColor(convertRawProp(context, rawProps, "strokeColor", sourceProps.strokeColor, 0x000000)),
       fillColor(convertRawProp(context, rawProps, "fillColor", sourceProps.fillColor, 0x000000)),
-      levelIndex(convertRawProp(context, rawProps, "levelIndex", sourceProps.levelIndex, 0)) {}
+      levelIndex(convertRawProp(context, rawProps, "zIndex", sourceProps.levelIndex, 0)) {}
 
 HeatMapProps::HeatMapProps(const PropsParserContext &context, const HeatMapProps &sourceProps, const RawProps &rawProps)
     : ViewProps(context, sourceProps, rawProps),
@@ -57,7 +58,8 @@ MarkerProps::MarkerProps(const PropsParserContext &context, const MarkerProps &s
       flat(convertRawProp(context, rawProps, "flat", sourceProps.flat, false)),
       anchor(convertRawProp(context, rawProps, "anchor", sourceProps.anchor, {0,0})),
       centerOffset(convertRawProp(context, rawProps, "centerOffset", sourceProps.centerOffset, {0,0})),
-      levelIndex(convertRawProp(context, rawProps, "levelIndex", sourceProps.levelIndex, 0)),
+      position(convertRawProp(context, rawProps, "position", sourceProps.position, {0,0})),
+      levelIndex(convertRawProp(context, rawProps, "zIndex", sourceProps.levelIndex, 0)),
       icon(convertRawProp(context, rawProps, "icon", sourceProps.icon,{"/0", 0, 0, 0, "/0", "/0", "/0"})) {}
 
 PolylineProps::PolylineProps(const PropsParserContext &context, const PolylineProps &sourceProps,
@@ -66,7 +68,7 @@ PolylineProps::PolylineProps(const PropsParserContext &context, const PolylinePr
       width(convertRawProp(context, rawProps, "width", sourceProps.width, 1.f)),
       color(convertRawProp(context, rawProps, "color", sourceProps.color, 0x000000)),
       colors(convertRawProp(context, rawProps, "colors", sourceProps.colors, {0xFF5566,0x112233,0x114477})),
-      levelIndex(convertRawProp(context, rawProps, "levelIndex", sourceProps.levelIndex, 0.f)),
+      levelIndex(convertRawProp(context, rawProps, "zIndex", sourceProps.levelIndex, 0.f)),
       geodesic(convertRawProp(context, rawProps, "geodesic", sourceProps.geodesic, false)),
       dotted(convertRawProp(context, rawProps, "dotted", sourceProps.dotted, false)),
       gradient(convertRawProp(context, rawProps, "gradient", sourceProps.gradient, false)),
@@ -78,7 +80,7 @@ PolygonProps::PolygonProps(const PropsParserContext &context, const PolygonProps
       strokeWidth(convertRawProp(context, rawProps, "strokeWidth", sourceProps.strokeWidth, 1.f)),
       strokeColor(convertRawProp(context, rawProps, "strokeColor", sourceProps.strokeColor, 0x000000)),
       fillColor(convertRawProp(context, rawProps, "fillColor", sourceProps.fillColor, 0x000000)),
-      levelIndex(convertRawProp(context, rawProps, "levelIndex", sourceProps.levelIndex, 0.f)) {}
+      levelIndex(convertRawProp(context, rawProps, "zIndex", sourceProps.levelIndex, 0.f)) {}
 
 } // namespace react
 } // namespace facebook

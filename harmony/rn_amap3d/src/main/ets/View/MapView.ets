@@ -483,7 +483,5 @@ export struct AMapView {
     }
     .height(1700)
     .width("100%")
-    .alignItems(HorizontalAlign.End)
-    .justifyContent(FlexAlign.End)
   }
 }
