@@ -11,6 +11,7 @@ class MapViewJSIBinder : public ViewComponentJSIBinder {
         object.setProperty(rt, "myLocationEnabled", "boolean");
         object.setProperty(rt, "indoorViewEnabled", "boolean");
         object.setProperty(rt, "buildingsEnabled", "boolean");
+        object.setProperty(rt, "labelsEnabled", "boolean");
         object.setProperty(rt, "compassEnabled", "boolean");
         object.setProperty(rt, "zoomControlsEnabled", "boolean");
         object.setProperty(rt, "scaleControlsEnabled", "boolean");
@@ -49,7 +50,7 @@ class CircleJSIBinder : public ViewComponentJSIBinder {
         object.setProperty(rt, "radius", "number");
         object.setProperty(rt, "strokeWidth", "number");
         object.setProperty(rt, "fillColor", "number");
-        object.setProperty(rt, "levelIndex", "number");
+        object.setProperty(rt, "zIndex", "number");
         return object;
     }
     facebook::jsi::Object createBubblingEventTypes(facebook::jsi::Runtime &rt) override {
@@ -101,7 +102,7 @@ class MarkerJSIBinder : public ViewComponentJSIBinder {
         object.setProperty(rt, "opacity", "number");
         object.setProperty(rt, "draggable", "boolean");
         object.setProperty(rt, "flat", "boolean");
-        object.setProperty(rt, "levelIndex", "number");
+        object.setProperty(rt, "zIndex", "number");
         object.setProperty(rt, "anchor", "Object");
         object.setProperty(rt, "centerOffset", "Object");
         object.setProperty(rt, "icon", "number");
@@ -128,7 +129,7 @@ class PolygonJSIBinder : public ViewComponentJSIBinder {
         object.setProperty(rt, "strokeWidth", "number");
         object.setProperty(rt, "strokeColor", "number");
         object.setProperty(rt, "fillColor", "number");
-        object.setProperty(rt, "levelIndex", "number");
+        object.setProperty(rt, "zIndex", "number");
         return object;
     }
     facebook::jsi::Object createBubblingEventTypes(facebook::jsi::Runtime &rt) override {
@@ -146,11 +147,11 @@ class PolylineJSIBinder : public ViewComponentJSIBinder {
         object.setProperty(rt, "points", "array");
         object.setProperty(rt, "dotted", "boolean");
         object.setProperty(rt, "geodesic", "boolean");
-        object.setProperty(rt, "levelIndex", "number");
+        object.setProperty(rt, "zIndex", "number");
         object.setProperty(rt, "color", "number");
         object.setProperty(rt, "colors", "array");
-        object.setProperty(rt, "levelIndex", "number");
         object.setProperty(rt, "gradient", "boolean");
+        object.setProperty(rt, "width", "number");
         return object;
     }
     facebook::jsi::Object createBubblingEventTypes(facebook::jsi::Runtime &rt) override {
