@@ -53,7 +53,6 @@ export const GOADE_MAP_VIEW_TYPE: string = "AMapView"
 
 export type GDMapViewDescriptor = Descriptor<"AMapView", MapViewProps>;
 
-@Entry
 @Component
 export struct AMapView {
   static NAME: string = "AMapView";
@@ -478,10 +477,8 @@ export struct AMapView {
   }
 
   build() {
-    Column() {
+    RNViewBase({ ctx: this.ctx, tag: this.tag }){
       MapViewComponent().width('100%').height('100%')
     }
-    .height(1700)
-    .width("100%")
   }
 }
