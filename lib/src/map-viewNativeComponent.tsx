@@ -6,6 +6,7 @@ import {
 
 import codegenNativeComponent from "react-native/Libraries/Utilities/codegenNativeComponent"
 import { Float, Int32, DirectEventHandler } from "react-native/Libraries/Types/CodegenTypes";
+import codegenNativeCommands from "react-native/Libraries/Utilities/codegenNativeCommands";
 
 
 export type LatLng = Readonly<{
@@ -213,3 +214,14 @@ export interface MapViewProps extends ViewProps {
 }
 
 export default codegenNativeComponent<MapViewProps>("AMapView") as HostComponent<MapViewProps>;
+type MapViewControlType = HostComponent<MapViewProps>;
+export interface NativeCommands {
+  moveCamera: (
+    viewRef: React.ElementRef<MapViewControlType>,
+    cameraPosition: Partial<CameraPosition>,
+    duration:number
+  ) => void
+}
+export const moveCameraCommands: NativeCommands = codegenNativeCommands<NativeCommands>({
+  supportedCommands: ["moveCamera"],
+});

@@ -2,15 +2,33 @@
 import AMapView, { Location, MapViewProps, voidEvent } from './map-viewNativeComponent'
 import React, { Component } from 'react';
 import type * as ReactNative from "react-native";
-import { LatLng, CameraPosition, LatLngBounds, onCameraEvent, MapPoi } from './map-viewNativeComponent'
+import {NativeMethods} from "react-native";
+import { LatLng, CameraPosition, LatLngBounds, onCameraEvent, MapPoi, moveCameraCommands } from './map-viewNativeComponent'
 
 export default class MapView extends Component<MapViewProps> {
   constructor(props: MapViewProps) {
     super(props);
   }
+
+  ref: React.ElementRef<typeof AMapView> | null = null;
+
+  /**
+   * 移动视角
+   */
+  moveCamera(cameraPosition: CameraPosition, duration = 0) {
+    console.info("AMapViewEventType map3d demo moveCamera")
+      if (this.ref) {
+		    moveCameraCommands.moveCamera(
+          this.ref,
+          cameraPosition,
+          duration
+		  );
+      }
+  }
+
   render() {
     return (
-      <AMapView
+      <AMapView {...this.props} ref={(ref) => (this.ref = ref)}
         {...this.props}
         onPress={(event: ReactNative.NativeSyntheticEvent<LatLng>) => {
           console.info("AMapViewEventType map3d demo 10.11")
