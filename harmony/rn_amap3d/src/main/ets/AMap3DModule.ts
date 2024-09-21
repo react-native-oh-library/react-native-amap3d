@@ -29,8 +29,4 @@ export class AMap3DModule extends TurboModule {
   constructor(ctx: TurboModuleContext) {
     super(ctx);
   }
-  //初始化initSDK() {} 需要用到'@amap/amap_lbs_map3d';
-  // getVersion(): Promise<string>  {
-  //   return this.getVersion();
-  // }
 }

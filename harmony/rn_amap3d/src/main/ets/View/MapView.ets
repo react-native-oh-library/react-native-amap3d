@@ -2,6 +2,7 @@ import {
   AMap,
   CameraPosition,
   CameraUpdateFactory,
+  CancelableCallback,
   CircleOptions,
   LatLng,
   MapView,
@@ -17,7 +18,7 @@ import {
   PolylineOptions
 } from '@amap/amap_lbs_map3d';
 
-import { Descriptor, RNOHContext, ViewBaseProps } from '@rnoh/react-native-openharmony';
+import { Descriptor, RNOHContext, RNViewBase, ViewBaseProps } from '@rnoh/react-native-openharmony';
 import { A_MAP_CIRCLE_VIEW_TYPE, AMapCircleProps, rgbaToHex } from './AMapCircle';
 import { A_MAP_POLYGON_TYPE, AMapPolygonProps } from './AMapPolygon';
 import { A_MAP_POLYLINE_TYPE, AMapPolylineProps } from './AMapPolyline';
@@ -63,6 +64,7 @@ export struct AMapView {
   markerTag: Array<number> = []
   @State gDMapDescriptor: GDMapViewDescriptor = {} as GDMapViewDescriptor
   private unregisterDescriptorChangesListener?: () => void = undefined
+  private cleanupCallback?: () => void = undefined;
   //覆盖物
   circleOption: Array<CircleOptions> = []
   polylineOption: Array<PolylineOptions> = []
@@ -82,6 +84,13 @@ export struct AMapView {
       }
     )
     this.show();
+    this.cleanupCallback = this.ctx.componentCommandReceiver.registerCommandCallback(
+      this.tag,
+      (command, args: ESObject[]) => {
+        if (command === 'moveCamera') {
+          this.aMap?.animateCamera(CameraUpdateFactory.newCameraPosition(args[0]),null,args[1]);
+        }
+      });
   }
 
   //地图
