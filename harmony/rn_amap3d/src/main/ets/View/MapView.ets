@@ -485,6 +485,10 @@ export struct AMapView {
     }
   }
 
+  aboutToDisappear(): void {
+    this.mapView.onDestroy();
+  }
+
   build() {
     RNViewBase({ ctx: this.ctx, tag: this.tag }){
       MapViewComponent().width('100%').height('100%')
