@@ -198,125 +198,130 @@ export struct AMapView {
     })
   }
 
-  show(): void {
-    MapViewManager.getInstance().registerMapViewCreatedCallback((mapview?: MapView) => {
-      if (!mapview) {
-        return;
+  private mapViewCreateCallback = (mapview?: MapView, mapViewName?: string) => {
+    if (!mapview) {
+      return;
+    }
+    this.mapView = mapview;
+    this.mapView.onCreate();
+    this.mapView.getMapAsync((map) => {
+      this.aMap = map;
+      Logger.info('map3d', 'EntryAbility', 'get map ' + this.aMap?.getCameraPosition()?.zoom);
+      if (this.initialCameraPosition != null) {
+        this.aMap?.moveCamera(CameraUpdateFactory.newCameraPosition(this.initialCameraPosition));
       }
-      this.mapView = mapview;
-      this.mapView.onCreate();
-      this.mapView.getMapAsync((map) => {
-        this.aMap = map;
-        Logger.info('map3d', 'EntryAbility', 'get map ' + this.aMap?.getCameraPosition()?.zoom);
-        if (this.initialCameraPosition != null) {
-          this.aMap?.moveCamera(CameraUpdateFactory.newCameraPosition(this.initialCameraPosition));
-        }
-        this.aMap?.setOnMapClickListener((point: LatLng) => {
-          this.onClickFunction(point)
-        });
-        this.aMap?.setOnCameraChangeListener(new OnCameraChangeListener(
-          (position: CameraPosition) => {
-            this.onCameraMoveFunction(position);
-          },
-          (position: CameraPosition) => {
-            this.onCameraIdleFunction(position);
-          }));
-        this.aMap?.addOnPOIClickListener((poi: Poi) => {
-          this.onPressPoiFunction(poi);
-        })
-        this.aMap?.setOnMapLongClickListener((point: LatLng) => {
-          this.onLongClickFunction(point)
-        });
-
-        let approvalNumber = this.aMap?.getMapContentApprovalNumber();
-        let satelliteImageApprovalNumber = this.aMap?.getSatelliteImageApprovalNumber();
-        Logger.info('map3d', 'EntryAbility',
-          `getMapContentApprovalNumber ${approvalNumber} satelliteImageApprovalNumber ${satelliteImageApprovalNumber}`);
-        //地图属性
-        {
-          this.aMap.setMapType(this.mapType);
-          this.aMap.setTrafficEnabled(this.trafficEnabled);
-          //设置地图最大缩放级别 缩放级别范围为[3, 20],超出范围将按最大级别计算 。
-          // 注：只有在有室内地图显示的情况下最大级别为20，否则最大级别为19。
-          this.aMap.setMinZoomLevel(this.minZoom);
-          this.aMap.setMaxZoomLevel(this.maxZoom);
-          this.aMap.setMyLocationEnabled(this.myLocationEnabled);
-          //设置最小缩放级别 缩放级别范围为[3, 20],超出范围将按最小级别计算
-          this.aMap.showBuildings(this.buildingsEnabled);
-          this.aMap.showMapText(this.labelsEnabled);
-          let uiSettings = this.aMap?.getUiSettings();
-          uiSettings?.setZoomGesturesEnabled(this.zoomGesturesEnabled);
-          uiSettings?.setScrollGesturesEnabled(this.scrollGesturesEnabled);
-          uiSettings?.setRotateGesturesEnabled(this.rotateGesturesEnabled);
-          uiSettings?.setTiltGesturesEnabled(this.tiltGesturesEnabled);
-          uiSettings?.setScaleControlsEnabled(this.scaleControlsEnabled);
-          uiSettings?.setCompassEnabled(this.compassEnabled);
-          uiSettings?.setMyLocationButtonEnabled(this.myLocationButtonEnabled);
-          uiSettings?.setZoomControlsEnabled(this.zoomControlsEnabled);
-          Logger.debug(`GaoDemap props settings finished`);
-          this.onLoadFunction();
-        }
-        for (let index = 0; index < this.circleOption.length; ++index) {
-          if (this.circleOption[index] && this.circleOption[index].getRadius()) {
-            this.aMap?.addCircle(this.circleOption[index])
-          }
-        }
-
-        for (let index = 0; index < this.polygonOption.length; ++index) {
-          if (this.polygonOption[index] && this.polygonOption[index].getPoints().length > 0) {
-            this.aMap?.addPolygon(this.polygonOption[index]);
-          }
-        }
-
-        for (let index = 0; index < this.polylineOption.length; ++index) {
-          if (this.polylineOption[index] && this.polylineOption[index].getPoints().length > 0) {
-            this.aMap?.addPolyline(this.polylineOption[index]);
-          }
-        }
-        this.aMap?.setOnPolylineClickListener((polyLine: Polyline): void => {
-          for (let index = 0; index < this.polylineOption.length; ++index) {
-            if (polyLine.getOptions() == this.polylineOption[index]) {
-              this.onPolyLineClickFunction(index)
-            }
-          }
-        });
-
-        for (let index = 0; index < this.markerOption.length; ++index) {
-          this.aMap?.addMarker(this.markerOption[index]);
-        }
-        this.aMap?.setOnMarkerClickListener((marker: Marker): boolean => {
-          for (let index = 0; index < this.markerOption.length; ++index) {
-            if (marker.getOptions() == this.markerOption[index]) {
-              this.onMarkerClickFunction(index)
-            }
-          }
-          return true;
-        });
-        this.aMap?.setOnMarkerDragListener(new OnMarkerDragListener(
-          (DragStart: Marker) => {
-            for (let index = 0; index < this.markerOption.length; ++index) {
-              if (DragStart.getOptions() == this.markerOption[index]) {
-                this.onMarkerDragStartFunction(index)
-              }
-            }
-          },
-          (Drag: Marker) => {
-            for (let index = 0; index < this.markerOption.length; ++index) {
-              if (Drag.getOptions() == this.markerOption[index]) {
-                this.onMarkerDragFunction(index)
-              }
-            }
-          },
-          (DragEnd: Marker) => {
-            for (let index = 0; index < this.markerOption.length; ++index) {
-              if (DragEnd.getOptions() == this.markerOption[index]) {
-                this.onMarkerDragEndFunction(DragEnd.getPosition(), index)
-              }
-            }
-          })
-        )
+      this.aMap?.setOnMapClickListener((point: LatLng) => {
+        this.onClickFunction(point)
+      });
+      this.aMap?.setOnCameraChangeListener(new OnCameraChangeListener(
+        (position: CameraPosition) => {
+          this.onCameraMoveFunction(position);
+        },
+        (position: CameraPosition) => {
+          this.onCameraIdleFunction(position);
+        }));
+      this.aMap?.addOnPOIClickListener((poi: Poi) => {
+        this.onPressPoiFunction(poi);
       })
-    });
+      this.aMap?.setOnMapLongClickListener((point: LatLng) => {
+        this.onLongClickFunction(point)
+      });
+
+      let approvalNumber = this.aMap?.getMapContentApprovalNumber();
+      let satelliteImageApprovalNumber = this.aMap?.getSatelliteImageApprovalNumber();
+      Logger.info('map3d', 'EntryAbility',
+        `getMapContentApprovalNumber ${approvalNumber} satelliteImageApprovalNumber ${satelliteImageApprovalNumber}`);
+      
+      //地图属性
+      {
+        this.aMap.setMapType(this.mapType);
+        this.aMap.setTrafficEnabled(this.trafficEnabled);
+        //设置地图最大缩放级别 缩放级别范围为[3, 20],超出范围将按最大级别计算 。
+        // 注：只有在有室内地图显示的情况下最大级别为20，否则最大级别为19。
+        this.aMap.setMinZoomLevel(this.minZoom);
+        this.aMap.setMaxZoomLevel(this.maxZoom);
+        this.aMap.setMyLocationEnabled(this.myLocationEnabled);
+        //设置最小缩放级别 缩放级别范围为[3, 20],超出范围将按最小级别计算
+        this.aMap.showBuildings(this.buildingsEnabled);
+        this.aMap.showMapText(this.labelsEnabled);
+        let uiSettings = this.aMap?.getUiSettings();
+        uiSettings?.setZoomGesturesEnabled(this.zoomGesturesEnabled);
+        uiSettings?.setScrollGesturesEnabled(this.scrollGesturesEnabled);
+        uiSettings?.setRotateGesturesEnabled(this.rotateGesturesEnabled);
+        uiSettings?.setTiltGesturesEnabled(this.tiltGesturesEnabled);
+        uiSettings?.setScaleControlsEnabled(this.scaleControlsEnabled);
+        uiSettings?.setCompassEnabled(this.compassEnabled);
+        uiSettings?.setMyLocationButtonEnabled(this.myLocationButtonEnabled);
+        uiSettings?.setZoomControlsEnabled(this.zoomControlsEnabled);
+      }
+
+      for (let index = 0; index < this.circleOption.length; ++index) {
+        if (this.circleOption[index] && this.circleOption[index].getRadius()) {
+          this.aMap?.addCircle(this.circleOption[index])
+        }
+      }
+
+      for (let index = 0; index < this.polygonOption.length; ++index) {
+        if (this.polygonOption[index] && this.polygonOption[index].getPoints().length > 0) {
+          this.aMap?.addPolygon(this.polygonOption[index]);
+        }
+      }
+
+      for (let index = 0; index < this.polylineOption.length; ++index) {
+        if (this.polylineOption[index] && this.polylineOption[index].getPoints().length > 0) {
+          this.aMap?.addPolyline(this.polylineOption[index]);
+        }
+      }
+
+      this.aMap?.setOnPolylineClickListener((polyLine: Polyline): void => {
+        for (let index = 0; index < this.polylineOption.length; ++index) {
+          if (polyLine.getOptions() == this.polylineOption[index]) {
+            this.onPolyLineClickFunction(index)
+          }
+        }
+      });
+
+      for (let index = 0; index < this.markerOption.length; ++index) {
+        this.aMap?.addMarker(this.markerOption[index]);
+      }
+
+      this.aMap?.setOnMarkerClickListener((marker: Marker): boolean => {
+        for (let index = 0; index < this.markerOption.length; ++index) {
+          if (marker.getOptions() == this.markerOption[index]) {
+            this.onMarkerClickFunction(index)
+          }
+        }
+        return true;
+      });
+
+      this.aMap?.setOnMarkerDragListener(new OnMarkerDragListener(
+        (DragStart: Marker) => {
+          for (let index = 0; index < this.markerOption.length; ++index) {
+            if (DragStart.getOptions() == this.markerOption[index]) {
+              this.onMarkerDragStartFunction(index)
+            }
+          }
+        },
+        (Drag: Marker) => {
+          for (let index = 0; index < this.markerOption.length; ++index) {
+            if (Drag.getOptions() == this.markerOption[index]) {
+              this.onMarkerDragFunction(index)
+            }
+          }
+        },
+        (DragEnd: Marker) => {
+          for (let index = 0; index < this.markerOption.length; ++index) {
+            if (DragEnd.getOptions() == this.markerOption[index]) {
+              this.onMarkerDragEndFunction(DragEnd.getPosition(), index)
+            }
+          }
+        })
+      )
+    })
+  }
+
+  show(): void {
+    MapViewManager.getInstance().registerMapViewCreatedCallback(this.mapViewCreateCallback);
   }
 
   /**
@@ -486,7 +491,14 @@ export struct AMapView {
   }
 
   aboutToDisappear(): void {
-    this.mapView.onDestroy();
+    if (this.mapViewCreateCallback) {
+      MapViewManager.getInstance().unregisterMapViewCreatedCallback(this.mapViewCreateCallback);
+    }
+    if (this.mapView) {
+      this.mapView.onDestroy();
+      this.mapView = undefined;
+      this.aMap = undefined;
+    }
   }
 
   build() {
