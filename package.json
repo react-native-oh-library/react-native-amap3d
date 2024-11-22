@@ -1,6 +1,6 @@
 {
   "name": "@react-native-oh-tpl/react-native-amap3d",
-  "version": "3.2.4-0.0.4",
+  "version": "3.2.4-0.0.5",
   "description": "react-native 高德地图组件，支持 harmonyOS",
   "license": "MIT",
   "keywords": [
@@ -16,10 +16,10 @@
     "react-native-amap3d.podspec",
     "harmony"
   ],
-  "homepage": "https://github.com/qiuxiang/react-native-amap3d",
+  "homepage": "https://github.com/react-native-oh-library/react-native-amap3d",
   "repository": {
     "type": "git",
-    "url": "https://github.com/qiuxiang/react-native-amap3d"
+    "url": "https://github.com/react-native-oh-library/react-native-amap3d"
   },
   "scripts": {
     "start": "react-native start",
@@ -31,6 +31,10 @@
   "dependencies": {
     "supercluster": "^7.1.4",
     "react-native-amap3d": "3.2.4"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "devDependencies": {
     "@react-native-picker/picker": "^2.4.8",
