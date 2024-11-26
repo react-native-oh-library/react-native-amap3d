@@ -65,7 +65,7 @@ void MapViewEventEmitter::onCameraMove(struct CameraPosition event) const {
         auto target = jsi::Object(runtime);
         target.setProperty(runtime, "longitude", event.target.longitude);
         target.setProperty(runtime, "latitude", event.target.latitude);
-        payload.setProperty(runtime, "targetInfo", target);
+        payload.setProperty(runtime, "targetValue", target);
         return payload;
     });
 }
@@ -79,7 +79,7 @@ void MapViewEventEmitter::onCameraIdle(struct CameraPosition event) const {
         auto target = jsi::Object(runtime);
         target.setProperty(runtime, "longitude", event.target.longitude);
         target.setProperty(runtime, "latitude", event.target.latitude);
-        payload.setProperty(runtime, "targetInfo", target);
+        payload.setProperty(runtime, "targetValue", target);
         return payload;
     });
 }
