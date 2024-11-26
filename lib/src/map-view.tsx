@@ -44,13 +44,13 @@ export default class MapView extends Component<MapViewProps> {
         }}
         onCameraMove={(event: ReactNative.NativeSyntheticEvent<CameraPosition>) => {
           console.info("AMapViewEventType map3d demo Move start event")
-          if (event.nativeEvent.target?.latitude) {
+          if (event.nativeEvent.targetValue?.latitude) {
             this.props.onCameraMove?.call(this, event);
           }
         }}
         onCameraIdle={(event: ReactNative.NativeSyntheticEvent<CameraPosition>) => {
           console.info("AMapViewEventType map3d demo Move end event")
-          if (event.nativeEvent.target?.latitude) {
+          if (event.nativeEvent.targetValue?.latitude) {
             this.props.onCameraIdle?.call(this, event);
           }
         }}

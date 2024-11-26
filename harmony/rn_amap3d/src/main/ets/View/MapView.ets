@@ -255,6 +255,7 @@ export struct AMapView {
         uiSettings?.setZoomControlsEnabled(this.zoomControlsEnabled);
       }
 
+      this.onLoadFunction();
       for (let index = 0; index < this.circleOption.length; ++index) {
         if (this.circleOption[index] && this.circleOption[index].getRadius()) {
           this.aMap?.addCircle(this.circleOption[index])

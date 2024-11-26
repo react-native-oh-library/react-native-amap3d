@@ -42,7 +42,7 @@ export type CameraPosition = Readonly<{
     /**
      * 中心坐标
      */
-    target?: {
+    targetValue?: {
         latitude: Float;
         longitude: Float;
     }
