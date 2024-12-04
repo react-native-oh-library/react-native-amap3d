@@ -1,5 +1,7 @@
 import {
   AMap,
+  BitmapDescriptor,
+  BitmapDescriptorFactory,
   CameraPosition,
   CameraUpdateFactory,
   CancelableCallback,
@@ -54,6 +56,8 @@ export const GOADE_MAP_VIEW_TYPE: string = "AMapView"
 
 export type GDMapViewDescriptor = Descriptor<"AMapView", MapViewProps>;
 
+let globalContext: Context;
+
 @Component
 export struct AMapView {
   static NAME: string = "AMapView";
@@ -72,6 +76,7 @@ export struct AMapView {
   markerOption: Array<MarkerOptions> = []
 
   aboutToAppear(): void {
+    globalContext = getContext().getApplicationContext();
     this.gDMapDescriptor = this.ctx.descriptorRegistry.getDescriptor<GDMapViewDescriptor>(this.tag);
     this.getProp(this.gDMapDescriptor);
     this.getOverlay(this.gDMapDescriptor);
@@ -81,6 +86,7 @@ export struct AMapView {
         Logger.debug(`RNOH in GaoDeMap descriptor change`);
         this.gDMapDescriptor = (newDescriptor as GDMapViewDescriptor)
         this.getProp(this.gDMapDescriptor);
+        this.getOverlay(this.gDMapDescriptor);
       }
     )
     this.show();
@@ -256,23 +262,6 @@ export struct AMapView {
       }
 
       this.onLoadFunction();
-      for (let index = 0; index < this.circleOption.length; ++index) {
-        if (this.circleOption[index] && this.circleOption[index].getRadius()) {
-          this.aMap?.addCircle(this.circleOption[index])
-        }
-      }
-
-      for (let index = 0; index < this.polygonOption.length; ++index) {
-        if (this.polygonOption[index] && this.polygonOption[index].getPoints().length > 0) {
-          this.aMap?.addPolygon(this.polygonOption[index]);
-        }
-      }
-
-      for (let index = 0; index < this.polylineOption.length; ++index) {
-        if (this.polylineOption[index] && this.polylineOption[index].getPoints().length > 0) {
-          this.aMap?.addPolyline(this.polylineOption[index]);
-        }
-      }
 
       this.aMap?.setOnPolylineClickListener((polyLine: Polyline): void => {
         for (let index = 0; index < this.polylineOption.length; ++index) {
@@ -282,14 +271,10 @@ export struct AMapView {
         }
       });
 
-      for (let index = 0; index < this.markerOption.length; ++index) {
-        this.aMap?.addMarker(this.markerOption[index]);
-      }
-
       this.aMap?.setOnMarkerClickListener((marker: Marker): boolean => {
         for (let index = 0; index < this.markerOption.length; ++index) {
           if (marker.getOptions() == this.markerOption[index]) {
-            this.onMarkerClickFunction(index)
+            this.onMarkerClickFunction(index);
           }
         }
         return true;
@@ -404,7 +389,7 @@ export struct AMapView {
     }
   }
 
-  private getOverlay(descriptor: GDMapViewDescriptor) {
+  private async getOverlay(descriptor: GDMapViewDescriptor) {
     let tagName = "";
     for (let i = 0; i < descriptor.childrenTags.length; i++) {
       tagName =
@@ -420,6 +405,7 @@ export struct AMapView {
           circleOptions.setStrokeColor(rgbaToHex(circleProp.strokeColor ? circleProp.strokeColor :
             "rgba(0, 0, 255, 0.5)"));
           circleOptions.setStrokeWidth(circleProp.strokeWidth ? circleProp.strokeWidth : 5);
+          this.aMap?.addCircle(circleOptions);
           this.circleOption.push(circleOptions);
           break;
         case A_MAP_POLYGON_TYPE:
@@ -436,7 +422,8 @@ export struct AMapView {
           polygonOptions.setStrokeColor(rgbaToHex(mapPolygonProp.strokeColor ? mapPolygonProp.strokeColor :
             "rgba(255, 0, 0, 0.5)"));
           polygonOptions.setZIndex(mapPolygonProp.zIndex ? mapPolygonProp.zIndex : 2);
-          this.polygonOption.push(polygonOptions)
+          this.aMap?.addPolygon(polygonOptions);
+          this.polygonOption.push(polygonOptions);
           break;
         case A_MAP_POLYLINE_TYPE:
         // add polyline
@@ -467,6 +454,7 @@ export struct AMapView {
             polylineOptions.setColorValues(test);
             polylineOptions.setGradient(mapPolylineProp.gradient ? mapPolylineProp.gradient : false);
           }
+          this.aMap?.addPolyline(polylineOptions);
           this.polylineOption.push(polylineOptions)
           break;
         case A_MAP_MARKER_TYPE:
@@ -482,9 +470,24 @@ export struct AMapView {
             mapMarkerProps.centerOffset ? mapMarkerProps.centerOffset.y : 0);
           markerOptions.setTitle('Marker');
           markerOptions.setSnippet('MapView Test')
+          if (mapMarkerProps.icon) {
+            let resoure: string = mapMarkerProps.icon["uri"];
+            try {
+              let bitmapDes: BitmapDescriptor | undefined =
+                await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
+              markerOptions.setIcon(bitmapDes);
+            } catch (error) {
+              let bitmapDesNull: BitmapDescriptor | undefined =
+                await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
+              if (bitmapDesNull) {
+                markerOptions.setIcon(bitmapDesNull);
+              }
+            }
+          }
           markerOptions.setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
           markerOptions.setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
           markerOptions.setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
+          this.aMap?.addMarker(markerOptions);
           this.markerOption.push(markerOptions)
           break;
       }
