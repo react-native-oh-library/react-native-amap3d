@@ -72,7 +72,7 @@ export struct AMapView {
   circleOption: Array<CircleOptions> = []
   polylineOption: Array<PolylineOptions> = []
   polygonOption: Array<PolygonOptions> = []
-  markerOption: Array<MarkerOptions> = []
+  markers: Array<Marker> = []
 
   aboutToAppear(): void {
     globalContext = getContext().getApplicationContext();
@@ -80,7 +80,7 @@ export struct AMapView {
     this.getProp(this.gDMapDescriptor);
     this.getOverlay(this.gDMapDescriptor);
     this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
-       (newDescriptor) => {
+      (newDescriptor) => {
         /*------ 当RN侧属性props有更改 -------*/
         console.log(`RNOH in GaoDeMap descriptor change`);
         this.gDMapDescriptor = (newDescriptor as GDMapViewDescriptor)
@@ -280,10 +280,6 @@ export struct AMapView {
         }
       }
 
-      for (let index = 0; index < this.markerOption.length; ++index) {
-        this.aMap?.addMarker(this.markerOption[index]);
-      }
-
       this.aMap?.setOnPolylineClickListener((polyLine: Polyline): void => {
         for (let index = 0; index < this.polylineOption.length; ++index) {
           if (polyLine.getOptions() == this.polylineOption[index]) {
@@ -293,8 +289,8 @@ export struct AMapView {
       });
 
       this.aMap?.setOnMarkerClickListener((marker: Marker): boolean => {
-        for (let index = 0; index < this.markerOption.length; ++index) {
-          if (marker.getOptions().getPosition() == this.markerOption[index].getPosition()) {
+        for (let index = 0; index < this.markers.length; ++index) {
+          if (marker.getOptions().getPosition() == this.markers[index].getPosition()) {
             this.onMarkerClickFunction(index);
           }
         }
@@ -303,22 +299,22 @@ export struct AMapView {
 
       this.aMap?.setOnMarkerDragListener(new OnMarkerDragListener(
         (DragStart: Marker) => {
-          for (let index = 0; index < this.markerOption.length; ++index) {
-            if (DragStart.getOptions() == this.markerOption[index]) {
+          for (let index = 0; index < this.markers.length; ++index) {
+            if (DragStart == this.markers[index]) {
               this.onMarkerDragStartFunction(index)
             }
           }
         },
         (Drag: Marker) => {
-          for (let index = 0; index < this.markerOption.length; ++index) {
-            if (Drag.getOptions() == this.markerOption[index]) {
+          for (let index = 0; index < this.markers.length; ++index) {
+            if (Drag == this.markers[index]) {
               this.onMarkerDragFunction(index)
             }
           }
         },
         (DragEnd: Marker) => {
-          for (let index = 0; index < this.markerOption.length; ++index) {
-            if (DragEnd.getOptions() == this.markerOption[index]) {
+          for (let index = 0; index < this.markers.length; ++index) {
+            if (DragEnd == this.markers[index]) {
               this.onMarkerDragEndFunction(DragEnd.getPosition(), index)
             }
           }
@@ -479,64 +475,60 @@ export struct AMapView {
         case A_MAP_MARKER_TYPE:
           let mapMarkerProps =
             this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).props as AMapMarkerProps;
-          for (let i = 0; i < this.markerOption.length; ++i) { //遍历数组里是否有之前的经纬度 没有在新增
-            if ((mapMarkerProps.position.latitude == this.markerOption[i].getPosition().latitude)
-              && (mapMarkerProps.position.longitude == this.markerOption[i].getPosition().longitude)) {
+          for (let i = 0; i < this.markers.length; ++i) { //遍历数组里是否有之前的经纬度 没有在新增
+            if ((mapMarkerProps.position.latitude == this.markers[i].getPosition().latitude)
+              && (mapMarkerProps.position.longitude == this.markers[i].getPosition().longitude)) {
               flag = true;
-              this.markerOption[i].setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
+              this.markers[i].setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
                 mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
-              this.markerOption[i].setInfoWindowOffset(mapMarkerProps.centerOffset ? mapMarkerProps.centerOffset.x : 0,
-                mapMarkerProps.centerOffset ? mapMarkerProps.centerOffset.y : 0);
+              this.markers[i].setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
+              this.markers[i].setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
+              this.markers[i].setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
               if (mapMarkerProps.icon) {
-                let resoure: string = mapMarkerProps.icon["uri"];
                 try {
+                  let resoure: string = mapMarkerProps.icon["uri"];
                   let bitmapDes: BitmapDescriptor | undefined =
                     await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                  this.markerOption[i].setIcon(bitmapDes);
+                  this.markers[i].setIcon(bitmapDes);
                 } catch (error) {
                   let bitmapDesNull: BitmapDescriptor | undefined =
                     await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
                   if (bitmapDesNull) {
-                    this.markerOption[i].setIcon(bitmapDesNull);
+                    this.markers[i].setIcon(bitmapDesNull);
                   }
                 }
               }
-              this.markerOption[i].setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
-              this.markerOption[i].setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
-              this.markerOption[i].setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
               break;
             }
           }
           if (!flag) {
             let markerOptions = new MarkerOptions();
             this.markerTag.push(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag);
-            markerOptions.setPosition(new LatLng(mapMarkerProps.position.latitude,
-              mapMarkerProps.position.longitude));
-            markerOptions.setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
-              mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
-            markerOptions.setInfoWindowOffset(mapMarkerProps.centerOffset ? mapMarkerProps.centerOffset.x : 0,
-              mapMarkerProps.centerOffset ? mapMarkerProps.centerOffset.y : 0);
-            markerOptions.setTitle('Marker');
-            markerOptions.setSnippet('MapView Test')
-            if (mapMarkerProps.icon) {
-              let resoure: string = mapMarkerProps.icon["uri"];
-              try {
-                let bitmapDes: BitmapDescriptor | undefined =
-                  await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                markerOptions.setIcon(bitmapDes);
-              } catch (error) {
-                let bitmapDesNull: BitmapDescriptor | undefined =
-                  await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
-                if (bitmapDesNull) {
-                  markerOptions.setIcon(bitmapDesNull);
+            let marker: Marker | undefined = this.aMap?.addMarker(markerOptions);
+            if (marker) {
+              this.markers.push(marker);
+              marker.setPosition(new LatLng(mapMarkerProps.position.latitude,
+                mapMarkerProps.position.longitude));
+              marker.setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
+                mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
+              if (mapMarkerProps.icon) {
+                try {
+                  let resoure: string = mapMarkerProps.icon["uri"];
+                  let bitmapDes: BitmapDescriptor | undefined =
+                    await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
+                  marker.setIcon(bitmapDes);
+                } catch (error) {
+                  let bitmapDesNull: BitmapDescriptor | undefined =
+                    await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
+                  if (bitmapDesNull) {
+                    marker.setIcon(bitmapDesNull);
+                  }
                 }
               }
+              marker.setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
+              marker.setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
+              marker.setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
             }
-            markerOptions.setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
-            markerOptions.setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
-            markerOptions.setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
-            this.aMap?.addMarker(markerOptions);
-            this.markerOption.push(markerOptions)
           }
           break;
       }
