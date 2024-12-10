@@ -24,6 +24,7 @@ import { A_MAP_CIRCLE_VIEW_TYPE, AMapCircleProps, rgbaToHex } from './AMapCircle
 import { A_MAP_POLYGON_TYPE, AMapPolygonProps } from './AMapPolygon';
 import { A_MAP_POLYLINE_TYPE, AMapPolylineProps } from './AMapPolyline';
 import { A_MAP_MARKER_TYPE, AMapMarkerProps } from './AMapMarker';
+
 import Logger from '../Logger';
 import { ArrayList } from '@kit.ArkTS';
 
@@ -55,7 +56,9 @@ export const GOADE_MAP_VIEW_TYPE: string = "AMapView"
 
 export type GDMapViewDescriptor = Descriptor<"AMapView", MapViewProps>;
 
-let globalContext: Context;
+export let globalContext: Context;
+
+export let markers: Array<Marker>
 
 @Component
 export struct AMapView {
@@ -72,13 +75,14 @@ export struct AMapView {
   circleOption: Array<CircleOptions> = []
   polylineOption: Array<PolylineOptions> = []
   polygonOption: Array<PolygonOptions> = []
-  markers: Array<Marker> = []
 
   aboutToAppear(): void {
     globalContext = getContext().getApplicationContext();
     this.gDMapDescriptor = this.ctx.descriptorRegistry.getDescriptor<GDMapViewDescriptor>(this.tag);
+    markers = [];
     this.getProp(this.gDMapDescriptor);
     this.getOverlay(this.gDMapDescriptor);
+
     this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
       (newDescriptor) => {
         /*------ 当RN侧属性props有更改 -------*/
@@ -289,8 +293,8 @@ export struct AMapView {
       });
 
       this.aMap?.setOnMarkerClickListener((marker: Marker): boolean => {
-        for (let index = 0; index < this.markers.length; ++index) {
-          if (marker.getOptions().getPosition() == this.markers[index].getPosition()) {
+        for (let index = 0; index < markers.length; ++index) {
+          if (marker.getOptions().getPosition() == markers[index].getPosition()) {
             this.onMarkerClickFunction(index);
           }
         }
@@ -299,22 +303,22 @@ export struct AMapView {
 
       this.aMap?.setOnMarkerDragListener(new OnMarkerDragListener(
         (DragStart: Marker) => {
-          for (let index = 0; index < this.markers.length; ++index) {
-            if (DragStart == this.markers[index]) {
+          for (let index = 0; index < markers.length; ++index) {
+            if (DragStart == markers[index]) {
               this.onMarkerDragStartFunction(index)
             }
           }
         },
         (Drag: Marker) => {
-          for (let index = 0; index < this.markers.length; ++index) {
-            if (Drag == this.markers[index]) {
+          for (let index = 0; index < markers.length; ++index) {
+            if (Drag == markers[index]) {
               this.onMarkerDragFunction(index)
             }
           }
         },
         (DragEnd: Marker) => {
-          for (let index = 0; index < this.markers.length; ++index) {
-            if (DragEnd == this.markers[index]) {
+          for (let index = 0; index < markers.length; ++index) {
+            if (DragEnd == markers[index]) {
               this.onMarkerDragEndFunction(DragEnd.getPosition(), index)
             }
           }
@@ -475,26 +479,26 @@ export struct AMapView {
         case A_MAP_MARKER_TYPE:
           let mapMarkerProps =
             this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).props as AMapMarkerProps;
-          for (let i = 0; i < this.markers.length; ++i) { //遍历数组里是否有之前的经纬度 没有在新增
-            if ((mapMarkerProps.position.latitude == this.markers[i].getPosition().latitude)
-              && (mapMarkerProps.position.longitude == this.markers[i].getPosition().longitude)) {
+          for (let i = 0; i < markers.length; ++i) { //遍历数组里是否有之前的经纬度 没有在新增
+            if ((mapMarkerProps.position.latitude == markers[i].getPosition().latitude)
+              && (mapMarkerProps.position.longitude == markers[i].getPosition().longitude)) {
               flag = true;
-              this.markers[i].setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
+              markers[i].setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
                 mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
-              this.markers[i].setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
-              this.markers[i].setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
-              this.markers[i].setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
+              markers[i].setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
+              markers[i].setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
+              markers[i].setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
               if (mapMarkerProps.icon) {
                 try {
                   let resoure: string = mapMarkerProps.icon["uri"];
                   let bitmapDes: BitmapDescriptor | undefined =
                     await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                  this.markers[i].setIcon(bitmapDes);
+                  markers[i].setIcon(bitmapDes);
                 } catch (error) {
                   let bitmapDesNull: BitmapDescriptor | undefined =
                     await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
                   if (bitmapDesNull) {
-                    this.markers[i].setIcon(bitmapDesNull);
+                    markers[i].setIcon(bitmapDesNull);
                   }
                 }
               }
@@ -506,7 +510,7 @@ export struct AMapView {
             this.markerTag.push(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag);
             let marker: Marker | undefined = this.aMap?.addMarker(markerOptions);
             if (marker) {
-              this.markers.push(marker);
+              markers.push(marker);
               marker.setPosition(new LatLng(mapMarkerProps.position.latitude,
                 mapMarkerProps.position.longitude));
               marker.setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
