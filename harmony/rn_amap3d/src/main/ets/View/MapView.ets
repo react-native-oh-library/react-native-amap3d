@@ -568,6 +568,7 @@ export struct AMapView {
                     marker.setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
                     marker.setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
                     marker.setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
+                    mapMarker.set(AMapView.num, markers);
                   }
                 }
               } catch (error) {
@@ -579,7 +580,6 @@ export struct AMapView {
       }
       flag = false;
     }
-    mapMarker.set(AMapView.num, markers);
   }
 
   aboutToDisappear(): void {
