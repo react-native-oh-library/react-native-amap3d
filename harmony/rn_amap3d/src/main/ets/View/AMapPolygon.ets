@@ -11,7 +11,6 @@ export interface AMapPolygonProps extends ViewBaseProps {
 
 export const A_MAP_POLYGON_TYPE: string = "AMapPolygon";
 export type AMapPolygonDescriptor = Descriptor<"AMapPolygon", AMapPolygonProps>
-@Entry
 @Component
 export struct AMapPolygon {
   ctx !: RNOHContext
