@@ -26,7 +26,6 @@ export interface AMapCircleProps extends ViewBaseProps {
 export const A_MAP_CIRCLE_VIEW_TYPE: string = "AMapCircle";
 
 export type AMapCircleDescriptor = Descriptor<"AMapCircle", AMapCircleProps>
-@Entry
 @Component
 export struct AMapCircle {
   static NAME:string = "AMapCircle";

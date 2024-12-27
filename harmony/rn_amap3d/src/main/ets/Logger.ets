@@ -30,6 +30,7 @@ class Logger {
   private format : string = '%{public}s, %{public}s';
   private isDebug : boolean;
 
+
   /**
    * constructor.
    *

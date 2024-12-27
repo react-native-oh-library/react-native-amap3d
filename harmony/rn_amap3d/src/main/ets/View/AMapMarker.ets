@@ -1,6 +1,7 @@
 import { BitmapDescriptor, BitmapDescriptorFactory, LatLng, Marker, Point } from '@amap/amap_lbs_map3d';
 import { Descriptor, RNOHContext, ViewBaseProps } from '@rnoh/react-native-openharmony';
-import { AMapView, globalContext, mapMarker } from './MapView';
+import { globalContext } from './MapView';
+import GlobalCache from '../GlobalCache';
 
 export interface AMapMarkerProps extends ViewBaseProps {
   position: LatLng;
@@ -17,7 +18,6 @@ export const A_MAP_MARKER_TYPE: string = "AMapMarker";
 
 export type AMapMarkerDescriptor = Descriptor<"AMapMarker", AMapMarkerProps>;
 
-@Entry
 @Component
 export struct AMapMarker {
   ctx !: RNOHContext
@@ -31,7 +31,8 @@ export struct AMapMarker {
     this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
       async (newDescriptor) => {
         /*------ 当RN侧属性props有更改 -------*/
-        this.markers = mapMarker.get(AMapView.num);
+        let currentPageTag = GlobalCache.currentPageMarker.get(this.tag)
+        this.markers = GlobalCache.mapMarker.get(currentPageTag);
         this.amapDescriptor = (newDescriptor as AMapMarkerDescriptor)
         let mapMarkerProps = this.amapDescriptor.props as AMapMarkerProps;
         if (this.markers) {
@@ -43,6 +44,8 @@ export struct AMapMarker {
               this.markers[i].setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
               this.markers[i].setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
               this.markers[i].setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
+              this.markers[i].getOptions().setInfoWindowOffset(mapMarkerProps.centerOffset?.x,mapMarkerProps.centerOffset?.y);
+              this.markers[i].setMarkerOptions(this.markers[i][i].getOptions());
               if (mapMarkerProps.icon) {
                 try {
                   let resoure: string = mapMarkerProps.icon["uri"];
