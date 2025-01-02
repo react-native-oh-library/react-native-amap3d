@@ -216,9 +216,12 @@ export struct AMapView {
     if (!mapview) {
       return;
     }
+    if (mapview.getMapViewName() != this.tag.toString()) {
+      return;
+    }
+    mapview.onCreate();
     GlobalCache.mapViews.set(this.tag, mapview);
     this.mapView = GlobalCache.mapViews.get(this.tag);
-    this.mapView.onCreate();
     this.mapView.getMapAsync((map:AMap) => {
       GlobalCache.maps.set(this.tag, map);
       this.aMap = GlobalCache.maps.get(this.tag);
