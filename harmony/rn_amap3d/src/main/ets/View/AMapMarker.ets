@@ -1,5 +1,5 @@
 import { BitmapDescriptor, BitmapDescriptorFactory, LatLng, Marker, Point } from '@amap/amap_lbs_map3d';
-import { Descriptor, RNOHContext, ViewBaseProps } from '@rnoh/react-native-openharmony';
+import { Descriptor, RNComponentContext, RNOHContext, ViewBaseProps } from '@rnoh/react-native-openharmony';
 import { globalContext } from './MapView';
 import GlobalCache from '../GlobalCache';
 
@@ -12,6 +12,7 @@ export interface AMapMarkerProps extends ViewBaseProps {
   zIndex?: number;
   anchor?: Point;
   centerOffset?: Point;
+  tag?:string;
 }
 
 export const A_MAP_MARKER_TYPE: string = "AMapMarker";
@@ -20,7 +21,7 @@ export type AMapMarkerDescriptor = Descriptor<"AMapMarker", AMapMarkerProps>;
 
 @Component
 export struct AMapMarker {
-  ctx !: RNOHContext
+  ctx !: RNComponentContext
   tag: number = -1
   markers: Array<Marker> | undefined = []
   @State amapDescriptor: AMapMarkerDescriptor = {} as AMapMarkerDescriptor
@@ -37,15 +38,13 @@ export struct AMapMarker {
         let mapMarkerProps = this.amapDescriptor.props as AMapMarkerProps;
         if (this.markers) {
           for (let i = 0; i < this.markers.length; ++i) {
-            if ((mapMarkerProps.position.latitude == this.markers[i].getPosition().latitude)
-              && (mapMarkerProps.position.longitude == this.markers[i].getPosition().longitude)) {
+            if (this.markers[i].getId() == GlobalCache.markerProp.get(this.tag)) {
               this.markers[i].setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
                 mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
               this.markers[i].setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
               this.markers[i].setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
               this.markers[i].setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
               this.markers[i].getOptions().setInfoWindowOffset(mapMarkerProps.centerOffset?.x,mapMarkerProps.centerOffset?.y);
-              this.markers[i].setMarkerOptions(this.markers[i][i].getOptions());
               if (mapMarkerProps.icon) {
                 try {
                   let resoure: string = mapMarkerProps.icon["uri"];
@@ -69,5 +68,6 @@ export struct AMapMarker {
   }
 
   build() {
+    ContentSlot(this.ctx.getContentForTag(this.tag))
   }
 }

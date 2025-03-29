@@ -19,14 +19,14 @@ import {
   PolylineOptions
 } from '@amap/amap_lbs_map3d';
 
-import { Descriptor, RNOHContext, RNViewBase, ViewBaseProps } from '@rnoh/react-native-openharmony';
+import { Descriptor, RNComponentContext, RNOHContext, RNViewBase, ViewBaseProps } from '@rnoh/react-native-openharmony';
 import { A_MAP_CIRCLE_VIEW_TYPE, AMapCircleProps, rgbaToHex } from './AMapCircle';
 import { A_MAP_POLYGON_TYPE, AMapPolygonProps } from './AMapPolygon';
 import { A_MAP_POLYLINE_TYPE, AMapPolylineProps } from './AMapPolyline';
 import { A_MAP_MARKER_TYPE, AMapMarkerProps } from './AMapMarker';
 
 import Logger from '../Logger';
-import { ArrayList } from '@kit.ArkTS';
+import { ArrayList, HashMap } from '@kit.ArkTS';
 import GlobalCache from '../GlobalCache';
 
 export interface MapViewProps extends ViewBaseProps {
@@ -63,7 +63,7 @@ export let globalContext: Context;
 export struct AMapView {
   static NAME: string = "AMapView";
   static num: number = 0;
-  ctx!: RNOHContext
+  ctx!: RNComponentContext
   tag: number = -1
   type: string = ""
   polyLineTag: Array<number> = []
@@ -83,14 +83,19 @@ export struct AMapView {
     globalContext = getContext().getApplicationContext();
     this.gDMapDescriptor = this.ctx.descriptorRegistry.getDescriptor<GDMapViewDescriptor>(this.tag);
     GlobalCache.markers = [];
+    GlobalCache.markerProp = new HashMap();
     this.getProp(this.gDMapDescriptor);
     this.show();
+    GlobalCache.childrenState.set(this.tag, false);
     this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
       (newDescriptor) => {
         /*------ 当RN侧属性props有更改 -------*/
         this.gDMapDescriptor = (newDescriptor as GDMapViewDescriptor)
         this.getProp(this.gDMapDescriptor);
-        this.getOverlay(this.gDMapDescriptor);
+        if(GlobalCache.childrenState.get(this.tag)){
+          this.getOverlay(this.gDMapDescriptor);
+        }
+        GlobalCache.childrenState.set(this.tag, true);
       }
     )
   }
@@ -105,6 +110,7 @@ export struct AMapView {
     GlobalCache.mapViews.get(this.tag)?.onDestroy();
     GlobalCache.mapMarker.delete(this.tag);
     GlobalCache.mapPolyLine.delete(this.tag);
+    GlobalCache.markerProp.clear();
   }
 
   //地图
@@ -293,7 +299,7 @@ export struct AMapView {
           let markers: Array<Marker> | undefined = GlobalCache.mapMarker.get(this.tag);
           if (len && markers) {
             for (let index = 0; index < len; ++index) {
-              if (marker.getOptions().getPosition() == markers[index].getPosition()) {
+              if (marker.getId() == markers[index].getId()) {
                 this.onMarkerClickFunction(index);
               }
             }
@@ -555,12 +561,13 @@ export struct AMapView {
           }
           break;
         case A_MAP_MARKER_TYPE:
-          let mapMarkerProps =
-            this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).props as AMapMarkerProps;
+          let markerDescriptor: Descriptor = this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i])
+          let markerChild: number[] = markerDescriptor.childrenTags;
+          let mapMarkerProps = markerDescriptor.props as AMapMarkerProps;
           let marker = (GlobalCache.mapMarker.get(this.tag) ?? []);
-          for (let i = 0; i < (GlobalCache.mapMarker.get(this.tag) ?? []).length; ++i) {
-            if ((mapMarkerProps.position.latitude == marker[i].getPosition().latitude) &&
-              (mapMarkerProps.position.longitude == marker[i].getPosition().longitude)) {
+
+          for (let i = 0; i < GlobalCache.markerProp.length; ++i) {
+            if (GlobalCache.markerProp.get(markerDescriptor.tag) == marker[i].getId()) {
               flag = true;
               marker[i].setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
                 mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
@@ -569,17 +576,25 @@ export struct AMapView {
               marker[i].setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
               marker[i].getOptions().setInfoWindowOffset(mapMarkerProps.centerOffset?.x,mapMarkerProps.centerOffset?.y);
               marker[i].setMarkerOptions(marker[i].getOptions());
-              if (mapMarkerProps.icon) {
-                try {
-                  let resoure: string = mapMarkerProps.icon["uri"];
-                  let bitmapDes: BitmapDescriptor | undefined =
-                    await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                  marker[i].setIcon(bitmapDes);
-                } catch (error) {
-                  let bitmapDesNull: BitmapDescriptor | undefined =
-                    await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
-                  if (bitmapDesNull) {
-                    marker[i].setIcon(bitmapDesNull);
+              //Handel Castum Marker
+              if(markerChild.length > 0) {
+                let bitmapView : BitmapDescriptor | undefined = await BitmapDescriptorFactory.fromView(() => {
+                  this.customMarkerBuilder(markerDescriptor.tag);
+                })
+                marker[i].setIcon(bitmapView);
+              } else {
+                if (mapMarkerProps.icon) {
+                  try {
+                    let resoure: string = mapMarkerProps.icon["uri"];
+                    let bitmapDes: BitmapDescriptor | undefined =
+                      await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
+                    marker[i].setIcon(bitmapDes);
+                  } catch (error) {
+                    let bitmapDesNull: BitmapDescriptor | undefined =
+                      await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
+                    if (bitmapDesNull) {
+                      marker[i].setIcon(bitmapDesNull);
+                    }
                   }
                 }
               }
@@ -593,32 +608,42 @@ export struct AMapView {
             this.markerTag.push(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag);
             if (this.aMap) {
               try {
-                let marker = this.aMap.addMarker(markerOptions);
-                if (marker) {
-                  GlobalCache.markers.push(marker);
-                  marker.setPosition(new LatLng(mapMarkerProps.position.latitude,
+                if (markerOptions) {
+                  markerOptions.setPosition(new LatLng(mapMarkerProps.position.latitude,
                     mapMarkerProps.position.longitude));
-                  marker.setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
+                  markerOptions.setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
                     mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
-                  if (mapMarkerProps.icon) {
-                    try {
-                      let resoure: string = mapMarkerProps.icon["uri"];
-                      let bitmapDes: BitmapDescriptor | undefined =
-                        await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                      marker.setIcon(bitmapDes);
-                    } catch (error) {
-                      let bitmapDesNull: BitmapDescriptor | undefined =
-                        await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
-                      if (bitmapDesNull) {
-                        marker.setIcon(bitmapDesNull);
+                  //handle custom marker
+                  if (markerChild.length > 0) {
+                    let bitmapView: BitmapDescriptor | undefined = await BitmapDescriptorFactory.fromView(() => {
+                      this.customMarkerBuilder(markerDescriptor.tag);
+                    })
+                    markerOptions.setIcon(bitmapView);
+                  } else {
+                    if (mapMarkerProps.icon) {
+                      try {
+                        let resoure: string = mapMarkerProps.icon["uri"];
+                        let bitmapDes: BitmapDescriptor | undefined =
+                          await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
+                        markerOptions.setIcon(bitmapDes);
+                      } catch (error) {
+                        let bitmapDesNull: BitmapDescriptor | undefined =
+                          await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
+                        if (bitmapDesNull) {
+                          markerOptions.setIcon(bitmapDesNull);
+                        }
                       }
                     }
                   }
-                  marker.setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
-                  marker.setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
-                  marker.setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
-                  marker.getOptions().setInfoWindowOffset(mapMarkerProps.centerOffset?.x,mapMarkerProps.centerOffset?.y);
-                  marker.setMarkerOptions(marker.getOptions());
+                  markerOptions.setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
+                  markerOptions.setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
+                  markerOptions.setFlat(mapMarkerProps.flat ? mapMarkerProps.flat : false);
+                  markerOptions.setInfoWindowOffset(mapMarkerProps.centerOffset?.x,mapMarkerProps.centerOffset?.y);
+                  let marker: Marker| undefined = this.aMap.addMarker(markerOptions);
+                  if(marker){
+                    GlobalCache.markerProp.set(markerDescriptor.tag, marker.getId())
+                    GlobalCache.markers.push(marker);
+                  }
                   GlobalCache.mapMarker.set(this.tag, GlobalCache.markers);
                 }
               } catch (error) {
@@ -631,6 +656,11 @@ export struct AMapView {
       flag = false;
       flagLine = false;
     }
+  }
+
+  @Builder
+  customMarkerBuilder(markerTag: number) {
+    ContentSlot(this.ctx.getContentForTag(markerTag))
   }
 
   build() {

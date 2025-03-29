@@ -30,7 +30,7 @@ type ImageSourcePropType = Readonly<{
   
 export type voidEvent = Readonly<{}>
 
-export interface MarkerProps {
+export interface MarkerProps extends ViewProps {
   /**
    * 坐标
    */ 
