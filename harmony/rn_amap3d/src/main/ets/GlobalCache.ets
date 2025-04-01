@@ -16,4 +16,6 @@ export default class GlobalCache {
   public static maps: HashMap<number, AMap> = new HashMap();
   public static currentPageMarker: HashMap<number, number> = new HashMap();
   public static currentPagePolyline: HashMap<number, number> = new HashMap();
+  public static childrenState: HashMap<number, boolean> = new HashMap();
+  public static markerProp: HashMap<number, string> = new HashMap();
 }
