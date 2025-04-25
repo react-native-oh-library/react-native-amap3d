@@ -109,6 +109,8 @@ export struct AMapView {
     GlobalCache.maps.get(this.tag)?.clear()
     GlobalCache.mapViews.get(this.tag)?.onDestroy();
     GlobalCache.mapMarker.delete(this.tag);
+
+    GlobalCache.polyLines = [];
     GlobalCache.mapPolyLine.delete(this.tag);
     GlobalCache.markerProp.clear();
   }
