@@ -47,6 +47,7 @@ export function rgbaToHex(rgbaString: string): number {
     value = (alpha << 24) | (red << 16) | (green << 8) | blue;
     return value;
   }
+  return 0xFF000000;
 }
 
 export interface AMapCircleProps extends ViewBaseProps {
