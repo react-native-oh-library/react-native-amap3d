@@ -7,4 +7,5 @@ export { default as Marker } from "./marker";
 export { default as MultiPoint } from "./multi-point";
 export { default as Polygon } from "./polygon";
 export { default as Polyline } from "./polyline";
+export * from "./types"
 
