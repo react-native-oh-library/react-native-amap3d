@@ -1,5 +1,7 @@
 import { LatLng} from '@amap/amap_lbs_map3d'
 import { Descriptor, RNOHContext, ViewBaseProps } from '@rnoh/react-native-openharmony';
+import GlobalCache from '../GlobalCache';
+import { ArrayList } from '@kit.ArkTS';
 
 export function rgbaToHex(rgbaString: string): number {
   // 处理十六进制字符串（如 #RGB、#RRGGBB、#AARRGGBB）
@@ -67,6 +69,27 @@ export struct AMapCircle {
   static NAME:string = "AMapCircle";
   ctx!: RNOHContext
   tag: number = -1
+  @State circleDescriptor: AMapCircleDescriptor = {} as AMapCircleDescriptor
+  private unregisterDescriptorChangesListener?: () => void = undefined
+
+  aboutToAppear(): void {
+    this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
+      async (newDescriptor) => {
+        /*------ 当RN侧属性props有更改 -------*/
+        let currentCircle = GlobalCache.circleCacheMap.get(this.tag)
+        this.circleDescriptor = (newDescriptor as AMapCircleDescriptor)
+        let mapCircleProp = this.circleDescriptor.props as AMapCircleProps;
+        if (currentCircle) {
+          currentCircle.setRadius(mapCircleProp.radius ? mapCircleProp.radius : 5000);
+          currentCircle.setCenter(new LatLng(mapCircleProp.center.latitude, mapCircleProp.center.longitude));
+          currentCircle.setFillColor(rgbaToHex(mapCircleProp.fillColor ? mapCircleProp.fillColor : "rgba(255, 0, 0, 0.5)"));
+          currentCircle.setStrokeColor(rgbaToHex(mapCircleProp.strokeColor ? mapCircleProp.strokeColor :
+            "rgba(0, 0, 255, 0.5)"))
+          currentCircle.setStrokeWidth(mapCircleProp.strokeWidth ? mapCircleProp.strokeWidth : 5);
+        }
+      }
+    )
+  }
   build() {
   }
 }
