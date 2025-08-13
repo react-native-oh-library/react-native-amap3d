@@ -503,7 +503,7 @@ export struct AMapView {
                     GlobalCachePolyLines[polylineIndex].setZIndex(mapPolylineProp.zIndex ? mapPolylineProp.zIndex : 1);
                     GlobalCachePolyLines[polylineIndex].setDottedLine(mapPolylineProp.dotted ? mapPolylineProp.dotted : false);
                     GlobalCachePolyLines[polylineIndex].setGeodesic(mapPolylineProp.geodesic ? mapPolylineProp.geodesic : false);
-                    GlobalCachePolyLines[polylineIndex].setWidth(mapPolylineProp.width ? mapPolylineProp.width : 5);
+                    GlobalCachePolyLines[polylineIndex].setWidth(mapPolylineProp.width ? vp2px(mapPolylineProp.width) : vp2px(5));
                     if (mapPolylineProp.color) {
                       GlobalCachePolyLines[polylineIndex].setColor(rgbaToHex(mapPolylineProp.color ? mapPolylineProp.color :
                         "rgba(0, 255, 0, 0.5)"));
@@ -548,7 +548,7 @@ export struct AMapView {
                     .setZIndex(mapPolylineProp.zIndex ? mapPolylineProp.zIndex : 1)
                     .setDottedLine(mapPolylineProp.dotted ? mapPolylineProp.dotted : false)
                     .setGeodesic(mapPolylineProp.geodesic ? mapPolylineProp.geodesic : false)
-                    .setWidth(mapPolylineProp.width ? mapPolylineProp.width : 5)
+                    .setWidth(mapPolylineProp.width ? vp2px(mapPolylineProp.width) : vp2px(5))
                     .setGradient(mapPolylineProp.gradient ? mapPolylineProp.gradient : false));
                 if(polyline){
                   polyline.setPoints(polylineOptionsList);
