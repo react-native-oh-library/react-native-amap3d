@@ -53,7 +53,7 @@ export struct AMapPolyline {
                     this.polyLines[i].setZIndex(mapPolylineProp.zIndex ? mapPolylineProp.zIndex : 1);
                     this.polyLines[i].setDottedLine(mapPolylineProp.dotted ? mapPolylineProp.dotted : false);
                     this.polyLines[i].setGeodesic(mapPolylineProp.geodesic ? mapPolylineProp.geodesic : false);
-                    this.polyLines[i].setWidth(mapPolylineProp.width ? mapPolylineProp.width : 5);
+                    this.polyLines[i].setWidth(mapPolylineProp.width ? vp2px(mapPolylineProp.width) : vp2px(5));
                     let polylineOptionsList = new ArrayList<LatLng>()
                     for (let index = 0; index < mapPolylineProp.points.length; index++) {
                       polylineOptionsList.add(new LatLng(mapPolylineProp.points[index].latitude,
