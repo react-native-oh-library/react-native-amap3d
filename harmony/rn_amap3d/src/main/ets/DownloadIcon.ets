@@ -47,6 +47,7 @@ export class DownloadIcon {
         })
         task.on('failed', (progress: request.agent.Progress) => {
           Logger.info('[maker icon]: downloadFile failed.', JSON.stringify(progress));
+          reject(new Error('downloadFile failed: ' + JSON.stringify(progress)));
         });
         task.on('response', async (response: request.agent.HttpResponse) => {
           Logger.info('[maker icon]: downloadFile response.', JSON.stringify(response));
@@ -68,7 +69,7 @@ export class DownloadIcon {
         task.start();
       }).catch((err: BusinessError) => {
         Logger.info(`[maker icon]: error downloadHttpFile`);
-        reject("downloadFile failed" + err.message);
+        reject(new Error("downloadFile failed: " + err.message));
       });
     });
   }
