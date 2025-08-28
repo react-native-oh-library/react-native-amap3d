@@ -3,6 +3,7 @@ import { Descriptor, RNComponentContext, RNOHContext, ViewBaseProps } from '@rno
 import { globalContext } from './MapView';
 import GlobalCache from '../GlobalCache';
 import { HashMap } from '@kit.ArkTS';
+import { DownloadIcon } from '../DownloadIcon';
 
 export interface AMapMarkerProps extends ViewBaseProps {
   position: LatLng;
@@ -55,10 +56,7 @@ export struct AMapMarker {
                     this.markers[i].getOptions().setInfoWindowOffset(mapMarkerProps.centerOffset?.x,mapMarkerProps.centerOffset?.y);
                     if (mapMarkerProps.icon) {
                       try {
-                        let resoure: string = mapMarkerProps.icon["uri"];
-                        let bitmapDes: BitmapDescriptor | undefined =
-                          await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                        this.markers[i].setIcon(bitmapDes);
+                        await DownloadIcon.updataMakerIcon(this.getUIContext(), this.markers[i], mapMarkerProps.icon);
                       } catch (error) {
                         let bitmapDesNull: BitmapDescriptor | undefined =
                           await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
