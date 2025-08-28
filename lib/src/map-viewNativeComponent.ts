@@ -215,13 +215,18 @@ export interface MapViewProps extends ViewProps {
 
 export default codegenNativeComponent<MapViewProps>("AMapView") as HostComponent<MapViewProps>;
 type MapViewControlType = HostComponent<MapViewProps>;
+
 export interface NativeCommands {
-  moveCamera: (
-    viewRef: React.ElementRef<MapViewControlType>,
-    cameraPosition: Partial<CameraPosition>,
-    duration:number
-  ) => void
+    moveCamera: (
+      viewRef: React.ElementRef<MapViewControlType>,
+      latitude: Float,
+      longitude: Float,
+      zoom: Float,
+      bearing: Float,
+      tilt: Float,
+      duration: Float
+    ) => void
 }
-export const moveCameraCommands: NativeCommands = codegenNativeCommands<NativeCommands>({
+export const Commands: NativeCommands = codegenNativeCommands<NativeCommands>({
   supportedCommands: ["moveCamera"],
 });
