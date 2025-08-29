@@ -32,7 +32,7 @@ struct ImageSourcePropType {
 };
 
 static inline void fromRawValue(const PropsParserContext &context, const RawValue &value, LatLng &result) {
-    auto map = (butter::map<std::string, RawValue>)value;
+    auto map = (std::unordered_map<std::string, RawValue>)value;
     auto tmp_latitude = map.find("latitude");
     if (tmp_latitude != map.end()) {
         fromRawValue(context, tmp_latitude->second, result.latitude);
@@ -46,7 +46,7 @@ static inline void fromRawValue(const PropsParserContext &context, const RawValu
 static inline std::string toString(const LatLng &value) { return "[Object LatLng]"; }
 
 static inline void fromRawValue(const PropsParserContext &context, const RawValue &value, CameraPosition &result) {
-    auto map = (butter::map<std::string, RawValue>)value;
+    auto map = (std::unordered_map<std::string, RawValue>)value;
     auto tmp_target = map.find("target");
     if (tmp_target != map.end()) {
         fromRawValue(context, tmp_target->second, result.target);
@@ -68,7 +68,7 @@ static inline void fromRawValue(const PropsParserContext &context, const RawValu
 static inline std::string toString(const CameraPosition &value) { return "[Object CameraPosition]"; }
 
 static inline void fromRawValue(const PropsParserContext &context, const RawValue &value, ImageSourcePropType &result) {
-    auto map = (butter::map<std::string, RawValue>)value;
+    auto map = (std::unordered_map<std::string, RawValue>)value;
     auto tmp_uri = map.find("uri");
     if (tmp_uri != map.end()) {
         fromRawValue(context, tmp_uri->second, result.uri);
