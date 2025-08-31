@@ -1,4 +1,4 @@
-# @react-native-oh-tpl/react-native-amap3d
+# @react-native-ohos/react-native-amap3d
 This project is based on [react-native-amap3d](https://github.com/qiuxiang/react-native-amap3d)
 ## Documentation
 [中文](https://gitee.com/react-native-oh-library/usage-docs/tree/master/zh-cn/react-native-amap3d.md)
