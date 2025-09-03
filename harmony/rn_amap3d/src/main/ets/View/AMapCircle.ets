@@ -63,7 +63,7 @@ export interface AMapCircleProps extends ViewBaseProps {
 
 export const A_MAP_CIRCLE_VIEW_TYPE: string = "AMapCircle";
 
-export type AMapCircleDescriptor = Descriptor<"AMapCircle", AMapCircleProps>
+export type AMapCircleDescriptor = Descriptor<"AMapCircle", '', '', AMapCircleProps>
 @Component
 export struct AMapCircle {
   static NAME:string = "AMapCircle";
@@ -78,7 +78,7 @@ export struct AMapCircle {
         /*------ 当RN侧属性props有更改 -------*/
         let currentCircle = GlobalCache.circleCacheMap.get(this.tag)
         this.circleDescriptor = (newDescriptor as AMapCircleDescriptor)
-        let mapCircleProp = this.circleDescriptor.props as AMapCircleProps;
+        let mapCircleProp = this.circleDescriptor.rawProps as AMapCircleProps;
         if (currentCircle) {
           currentCircle.setRadius(mapCircleProp.radius ? mapCircleProp.radius : 5000);
           currentCircle.setCenter(new LatLng(mapCircleProp.center.latitude, mapCircleProp.center.longitude));

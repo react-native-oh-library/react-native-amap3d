@@ -19,7 +19,7 @@ export interface AMapMarkerProps extends ViewBaseProps {
 
 export const A_MAP_MARKER_TYPE: string = "AMapMarker";
 
-export type AMapMarkerDescriptor = Descriptor<"AMapMarker", AMapMarkerProps>;
+export type AMapMarkerDescriptor = Descriptor<"AMapMarker", '', '', AMapMarkerProps>;
 
 @Component
 export struct AMapMarker {
@@ -39,7 +39,7 @@ export struct AMapMarker {
         this.markers = GlobalCache.mapMarker.get(currentMapTag) ?? [];
         this.markerTagAndDescriptorTagArray = GlobalCache.markerTagAndDescriptorTag.get(currentMapTag) ?? [];
         this.amapDescriptor = (newDescriptor as AMapMarkerDescriptor)
-        let mapMarkerProps = this.amapDescriptor.props as AMapMarkerProps;
+        let mapMarkerProps = this.amapDescriptor.rawProps as AMapMarkerProps;
         if (this.markers) {
 
           for (let j = 0; j < this.markerTagAndDescriptorTagArray.length; ++j) {
