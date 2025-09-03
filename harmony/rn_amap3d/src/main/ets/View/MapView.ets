@@ -1,4 +1,3 @@
-
 import {
   AMap,
   BitmapDescriptor,
@@ -33,6 +32,9 @@ import GlobalCache from '../GlobalCache';
 import { application } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import geoLocationManager from '@ohos.geoLocationManager';
+import {
+  AMapLocationManagerImpl,
+  AMapLocationOption, AMapLocationReGeocodeLanguage, AMapLocationType, IAMapLocationListener } from '@amap/amap_lbs_location';
 
 export interface MapViewProps extends ViewBaseProps {
   initialCameraPosition?: CameraPosition;
@@ -82,9 +84,9 @@ export struct AMapView {
   private markerTagAndDescriptorTagArray : Array<HashMap<number, string>> = new Array();
   private polylineTagAndDescriptorTagArray : Array<HashMap<number, string>> = new Array();
   private latitude: number = 39.806901;
-  private longitude: number = 116.438055;
-
+  private longitude: number = 1165;
   aboutToAppear(): void {
+
     this.cleanupCallback = this.ctx.componentCommandReceiver.registerCommandCallback(
       this.tag,
       (command, args: ESObject[]) => {
@@ -128,6 +130,8 @@ export struct AMapView {
   }
 
   //地图
+  private context = getContext(this);
+  locationManager?:AMapLocationManagerImpl
   private mapView?: MapView;
   private aMap?: AMap;
   mapType: number = 1;
@@ -361,10 +365,39 @@ export struct AMapView {
             }
           }
         }))
+
+      if (this.myLocationEnabled) {
+        let options: AMapLocationOption = {
+          priority: geoLocationManager.LocationRequestPriority.FIRST_FIX,
+          scenario: geoLocationManager.LocationRequestScenario.UNSET,
+          timeInterval: 2000,
+          distanceInterval: 0,
+          maxAccuracy: 20,
+          allowsBackgroundLocationUpdates: false,
+          locatingWithReGeocode: true,
+          reGeocodeLanguage: AMapLocationReGeocodeLanguage.Chinese,
+          isOffset: true
+        };
+
+        let locationListener: IAMapLocationListener = {
+          onLocationChanged: (location) => {
+            this.latitude = location.latitude;
+            this.longitude = location.longitude;
+          },
+          onLocationError: (error) => {
+            console.error('失败: ' + JSON.stringify(error));
+          }
+        };
+
+        this.locationManager = new AMapLocationManagerImpl(globalContext);
+        this.locationManager?.setLocationListener(AMapLocationType.Updating, locationListener);
+        this.locationManager?.setLocationOption(AMapLocationType.Updating, options);
+        this.locationManager?.startUpdatingLocation();
+      }else {
+        this.locationManager?.stopUpdatingLocation()
+      }
       this.aMap?.setOnMyLocationChangeListener((location: geoLocationManager.Location) => {
-        // 纬度
         this.latitude = location.latitude;
-        // 经度
         this.longitude = location.longitude;
       })
     })
@@ -712,7 +745,7 @@ export struct AMapView {
     };
     listener.onLocationChanged(location);
     if (this.intervalId === 0) {
-      this.intervalId = setInterval(() => {
+      this.intervalId = setInterval (() => {
         try {
           location.latitude = this.latitude;
           location.longitude = this.longitude;
