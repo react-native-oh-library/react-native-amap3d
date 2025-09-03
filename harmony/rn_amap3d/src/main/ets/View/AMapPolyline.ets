@@ -22,7 +22,7 @@ export function convertColorsToNumbers(colorString: string): number {
 
 export const A_MAP_POLYLINE_TYPE: string = "AMapPolyline";
 
-export type AMapPolylineDescriptor = Descriptor<"AMapPolyline", AMapPolylineProps>
+export type AMapPolylineDescriptor = Descriptor<"AMapPolyline", '', '', AMapPolylineProps>
 
 @Component
 export struct AMapPolyline {
@@ -42,7 +42,7 @@ export struct AMapPolyline {
         this.polyLines = GlobalCache.mapPolyLine.get(currentMapTag) ?? [];
         this.polyLineTagAndDescriptorTagArray = GlobalCache.polyLinesTagAndDescriptorTag.get(currentMapTag) ?? [];
         this.amapDescriptor = (newDescriptor as AMapPolylineDescriptor)
-        let mapPolylineProp = this.amapDescriptor.props as AMapPolylineProps;
+        let mapPolylineProp = this.amapDescriptor.rawProps as AMapPolylineProps;
         if (this.polyLines && this.polyLines.length > 0) {
           for (let j = 0; j < this.polyLineTagAndDescriptorTagArray.length; ++j) {
             this.polyLineTagAndDescriptorTagArray[j].forEach(async (polyLineID: string, polyLineTag: number,

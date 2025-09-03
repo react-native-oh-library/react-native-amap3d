@@ -22,25 +22,65 @@
  * SOFTWARE.
  */
 
-import type { TurboModule, TurboModuleContext } from '@rnoh/react-native-openharmony/ts';
-import { RNPackage, TurboModulesFactory } from '@rnoh/react-native-openharmony/ts';
+import type {
+  UITurboModule,
+  UITurboModuleContext
+} from '@rnoh/react-native-openharmony/ts';
+import { RNPackage } from '@rnoh/react-native-openharmony/ts';
 import { AMap3DModule } from './AMap3DModule';
 
-class AMap3DModulesFactory extends TurboModulesFactory {
-  createTurboModule(name: string): TurboModule | null {
-    if (name === 'AMapSdk') {
-      return new AMap3DModule(this.ctx)
-    }
-    return null;
-  }
-
-  hasTurboModule(name: string): boolean {
-    return name === 'AMapSdk';
-  }
-}
-
 export class AMap3DPackage extends RNPackage {
-  createTurboModulesFactory(ctx: TurboModuleContext): TurboModulesFactory {
-    return new AMap3DModulesFactory(ctx);
+  // 确保模块被正确创建
+  getUITurboModuleFactoryByNameMap(): Map<
+  string,
+  (ctx: UITurboModuleContext) => UITurboModule | null
+  > {
+    console.log('AMap3DPackage: Creating module factory map');
+
+    const map = new Map<string, (ctx: UITurboModuleContext) => UITurboModule | null>();
+
+    map.set('AMapSdk', (ctx: UITurboModuleContext) => {
+      console.log('AMap3DPackage: Creating AMapSdk module instance');
+      try {
+        const module = new AMap3DModule(ctx);
+        console.log('AMap3DPackage: Module created successfully');
+        return module;
+      } catch (error) {
+        console.error('AMap3DPackage: Error creating module:', error);
+        return null;
+      }
+    });
+
+    return map;
+  }
+
+  /**
+   * 添加其他生命周期方法确保模块注册
+   */
+  createTurboModulesFactory(ctx: UITurboModuleContext): any {
+    console.log('AMap3DPackage: createTurboModulesFactory called');
+    return {
+      createTurboModule: (name: string) => {
+        if (name === 'AMapSdk') {
+          console.log('Creating AMapSdk module via legacy factory');
+          return new AMap3DModule(ctx);
+        }
+        return null;
+      },
+      hasTurboModule: (name: string) => name === 'AMapSdk',
+      prepareEagerTurboModules: () => Promise.resolve()
+    };
+  }
+
+  getDebugName(): string {
+    return 'AMap3DPackage';
   }
 }
+
+// 导出创建函数
+export const createAMap3DPackage = () => {
+  console.log('Creating AMap3DPackage instance');
+  return new AMap3DPackage({} as any);
+};
+
+export default AMap3DPackage;
