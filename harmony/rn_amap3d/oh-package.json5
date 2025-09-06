@@ -3,7 +3,7 @@
   "devDependencies": {
   },
   "name": "@react-native-ohos/react-native-amap3d",
-  "version": "3.2.5-rc.0",
+  "version": "3.2.5-rc.1",
   "description": "Please describe the basic information.",
   "main": "index.ets",
   "author": "",
