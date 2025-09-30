@@ -37,6 +37,7 @@ import geoLocationManager from '@ohos.geoLocationManager';
 import {
   AMapLocationManagerImpl,
   AMapLocationOption, AMapLocationReGeocodeLanguage, AMapLocationType, IAMapLocationListener } from '@amap/amap_lbs_location';
+import { DownloadIcon } from '../DownloadIcon';
 
 export interface MapViewProps extends ViewBaseProps {
   initialCameraPosition?: CameraPosition;
@@ -628,10 +629,7 @@ export struct AMapView {
                     } else {
                       if (mapMarkerProps.icon) {
                         try {
-                          let resoure: string = mapMarkerProps.icon["uri"];
-                          let bitmapDes: BitmapDescriptor | undefined =
-                            await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                          this.markers[markerIndex].setIcon(bitmapDes);
+                          await DownloadIcon.updataMakerIcon(this.getUIContext(), this.markers[markerIndex], mapMarkerProps.icon);
                         } catch (error) {
                           let bitmapDesNull: BitmapDescriptor | undefined =
                             await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
@@ -667,10 +665,7 @@ export struct AMapView {
                   } else {
                     if (mapMarkerProps.icon) {
                       try {
-                        let resoure: string = mapMarkerProps.icon["uri"];
-                        let bitmapDes: BitmapDescriptor | undefined =
-                          await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                        markerOptions.setIcon(bitmapDes);
+                        await DownloadIcon.updataMakerIcon(this.getUIContext(), markerOptions, mapMarkerProps.icon);
                       } catch (error) {
                         let bitmapDesNull: BitmapDescriptor | undefined =
                           await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
