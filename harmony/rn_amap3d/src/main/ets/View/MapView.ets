@@ -17,7 +17,9 @@ import {
   Poi,
   PolygonOptions,
   Polyline,
-  PolylineOptions
+  PolylineOptions,
+  MyLocationStyle,
+  LocationSource
 } from '@amap/amap_lbs_map3d';
 
 import { Descriptor, RNComponentContext, RNOHContext, RNViewBase, ViewBaseProps } from '@rnoh/react-native-openharmony';
@@ -27,11 +29,15 @@ import { A_MAP_POLYLINE_TYPE, AMapPolylineProps } from './AMapPolyline';
 import { A_MAP_MARKER_TYPE, AMapMarkerProps } from './AMapMarker';
 
 import Logger from '../Logger';
-import { ArrayList, HashMap } from '@kit.ArkTS';
+import { ArrayList, HashMap, JSON } from '@kit.ArkTS';
 import GlobalCache from '../GlobalCache';
 import { application } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import geoLocationManager from '@ohos.geoLocationManager';
+import {
+  AMapLocationManagerImpl,
+  AMapLocationOption, AMapLocationReGeocodeLanguage, AMapLocationType, IAMapLocationListener } from '@amap/amap_lbs_location';
+import { DownloadIcon } from '../DownloadIcon';
 
 export interface MapViewProps extends ViewBaseProps {
   initialCameraPosition?: CameraPosition;
@@ -80,9 +86,7 @@ export struct AMapView {
   private polylines : Array<Polyline> = new Array();
   private markerTagAndDescriptorTagArray : Array<HashMap<number, string>> = new Array();
   private polylineTagAndDescriptorTagArray : Array<HashMap<number, string>> = new Array();
-  private latitude: number = 39.806901;
-  private longitude: number = 116.438055;
-  
+  private mapListener?: OnLocationChangedListener;
   aboutToAppear(): void {
     this.cleanupCallback = this.ctx.componentCommandReceiver.registerCommandCallback(
       this.tag,
@@ -102,7 +106,17 @@ export struct AMapView {
           GlobalCache.mapPolyLine.clear();
           /*------ 当RN侧属性props有更改 -------*/
           this.gDMapDescriptor = (newDescriptor as GDMapViewDescriptor)
+          let oldMyLocationEnabled = this.myLocationEnabled;
           this.getProp(this.gDMapDescriptor);
+          if (oldMyLocationEnabled !== this.myLocationEnabled) {
+            this.aMap.setMyLocationEnabled(this.myLocationEnabled);
+            if (this.myLocationEnabled) {
+              this.startLocationUpdates();
+            } else {
+              this.stopLocationUpdates();
+            }
+          }
+
           this.getOverlay(this.gDMapDescriptor);
         }
 
@@ -126,7 +140,8 @@ export struct AMapView {
     GlobalCache.circleCacheMap.clear();
   }
 
-  //地图
+  locationManager?:AMapLocationManagerImpl
+  private locationStyle: MyLocationStyle = new MyLocationStyle();
   private mapView?: MapView;
   private aMap?: AMap;
   mapType: number = 1;
@@ -244,10 +259,12 @@ export struct AMapView {
     this.mapView.getMapAsync(async (map: AMap) => {
       GlobalCache.maps.set(this.tag, map);
       this.aMap = GlobalCache.maps.get(this.tag);
+      this.aMap.setLocationSource(this);
       this.getOverlay(this.gDMapDescriptor);
       if (this.initialCameraPosition != null) {
         this.aMap?.moveCamera(CameraUpdateFactory.newCameraPosition(this.initialCameraPosition));
       }
+
       this.aMap?.setOnMapClickListener((point: LatLng) => {
         this.onClickFunction(point)
       });
@@ -291,8 +308,16 @@ export struct AMapView {
       uiSettings?.setCompassEnabled(this.compassEnabled);
       uiSettings?.setMyLocationButtonEnabled(this.myLocationButtonEnabled);
       uiSettings?.setZoomControlsEnabled(this.zoomControlsEnabled);
-
       this.onLoadFunction();
+      if (this.myLocationEnabled) {
+        setTimeout(() => {
+          if (this.aMap) {
+            const targetType = MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE_NO_CENTER;
+            this.locationStyle.myLocationType(targetType);
+            this.aMap.setMyLocationStyle(this.locationStyle);
+          }
+        },50);
+      }
       this.aMap?.setOnPolylineClickListener((polyLine: Polyline): void => {
         let len: number | undefined = GlobalCache.mapPolyLine.get(this.tag)?.length;
         let polyLinesArray: Array<Polyline> | undefined = GlobalCache.mapPolyLine.get(this.tag);
@@ -360,12 +385,6 @@ export struct AMapView {
             }
           }
         }))
-      this.aMap?.setOnMyLocationChangeListener((location: geoLocationManager.Location) => {
-        // 纬度
-        this.latitude = location.latitude;
-        // 经度
-        this.longitude = location.longitude;
-      })
     })
   }
 
@@ -475,7 +494,6 @@ export struct AMapView {
             circle.setStrokeColor(rgbaToHex(circleProp.strokeColor ? circleProp.strokeColor :
               "rgba(0, 0, 255, 0.5)"));
             circle.setStrokeWidth(circleProp.strokeWidth ? circleProp.strokeWidth : 5);
-			circle.setZIndex(circleProp.zIndex ? circleProp.zIndex : 2);
           }
           break;
         case A_MAP_POLYGON_TYPE:
@@ -611,10 +629,7 @@ export struct AMapView {
                     } else {
                       if (mapMarkerProps.icon) {
                         try {
-                          let resoure: string = mapMarkerProps.icon["uri"];
-                          let bitmapDes: BitmapDescriptor | undefined =
-                            await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                          this.markers[markerIndex].setIcon(bitmapDes);
+                          await DownloadIcon.updataMakerIcon(this.getUIContext(), this.markers[markerIndex], mapMarkerProps.icon);
                         } catch (error) {
                           let bitmapDesNull: BitmapDescriptor | undefined =
                             await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
@@ -650,10 +665,7 @@ export struct AMapView {
                   } else {
                     if (mapMarkerProps.icon) {
                       try {
-                        let resoure: string = mapMarkerProps.icon["uri"];
-                        let bitmapDes: BitmapDescriptor | undefined =
-                          await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
-                        markerOptions.setIcon(bitmapDes);
+                        await DownloadIcon.updataMakerIcon(this.getUIContext(), markerOptions, mapMarkerProps.icon);
                       } catch (error) {
                         let bitmapDesNull: BitmapDescriptor | undefined =
                           await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
@@ -688,39 +700,49 @@ export struct AMapView {
       flagLine = false;
     }
   }
+  private  startLocationUpdates() {
+    if (this.myLocationEnabled) {
+      let options: AMapLocationOption = {
+        priority: geoLocationManager.LocationRequestPriority.FIRST_FIX,
+        scenario: geoLocationManager.LocationRequestScenario.UNSET,
+        timeInterval: 2000,
+        distanceInterval: 0,
+        maxAccuracy: 20,
+        allowsBackgroundLocationUpdates: false,
+        locatingWithReGeocode: true,
+        reGeocodeLanguage: AMapLocationReGeocodeLanguage.Chinese,
+        isOffset: true
+      };
+      let locationListener: IAMapLocationListener = {
+        onLocationChanged: (location) => {
+          this.mapListener?.onLocationChanged(location)
+        },
+        onLocationError: (error) => {
+          console.error('失败: ' + JSON.stringify(error));
+        }
+      };
+      this.locationManager = new AMapLocationManagerImpl(globalContext);
+      this.locationManager?.setLocationListener(AMapLocationType.Updating, locationListener);
+      this.locationManager?.setLocationOption(AMapLocationType.Updating, options);
+      this.locationManager?.startUpdatingLocation();
 
+    }
+  }
+
+  private stopLocationUpdates() {
+    this.locationManager?.stopUpdatingLocation();
+  }
   @Builder
   customMarkerBuilder(markerTag: number) {
     ContentSlot(this.ctx.getContentForTag(markerTag))
   }
 
   activate(listener: OnLocationChangedListener): void {
-    let location: geoLocationManager.Location = {
-      accuracy: 1000,
-      altitude: 0,
-      direction: 0,
-      latitude: 39.806901,
-      longitude: 116.438055,
-      speed: 0,
-      timeSinceBoot: 0,
-      timeStamp: 0,
-      altitudeAccuracy: 0,
-      speedAccuracy: 0,
-      directionAccuracy: 0,
-      uncertaintyOfTimeSinceBoot: 10,
-      sourceType: geoLocationManager.LocationSourceType.GNSS
-    };
-    listener.onLocationChanged(location);
-    if (this.intervalId === 0) {
-      this.intervalId = setInterval(() => {
-        try {
-          location.latitude = this.latitude;
-          location.longitude = this.longitude;
-          listener.onLocationChanged(location);
-        } catch (e) {
-          console.info('activate onLocationChanged' + (e as BusinessError).message);
-        }
-      }, 1000);
+    this.mapListener = listener;
+    this.locationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE_NO_CENTER);
+    this.aMap?.setMyLocationStyle(this.locationStyle);
+    if (this.myLocationEnabled) {
+      this.startLocationUpdates();
     }
   }
 
@@ -734,6 +756,7 @@ export struct AMapView {
   build() {
     RNViewBase({ ctx: this.ctx, tag: this.tag }) {
       MapViewComponent({ mapViewName: new String(this.tag).valueOf() }).width('100%').height('100%')
+
     }
   }
 }
