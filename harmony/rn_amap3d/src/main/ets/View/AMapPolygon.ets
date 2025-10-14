@@ -13,7 +13,9 @@ export interface AMapPolygonProps extends ViewBaseProps {
 }
 
 export const A_MAP_POLYGON_TYPE: string = "AMapPolygon";
-export type AMapPolygonDescriptor = Descriptor<"AMapPolygon", AMapPolygonProps>
+
+export type AMapPolygonDescriptor = Descriptor<"AMapPolygon", '', '', AMapPolygonProps>
+
 @Component
 export struct AMapPolygon {
   ctx !: RNOHContext
@@ -28,7 +30,7 @@ export struct AMapPolygon {
         /*------ 当RN侧属性props有更改 -------*/
         let currentPolygon = GlobalCache.polygonCacheMap.get(this.tag)
         this.amapDescriptor = (newDescriptor as AMapPolygonDescriptor)
-        let mapPolygonProp = this.amapDescriptor.props as AMapPolygonProps;
+        let mapPolygonProp = this.amapDescriptor.rawProps as AMapPolygonProps;
         if (currentPolygon) {
           let polygonOptionsList = new ArrayList<LatLng>()
           for (let index = 0; index < mapPolygonProp.points.length; index++) {

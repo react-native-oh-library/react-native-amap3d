@@ -9,8 +9,8 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@rnoh/react-native-openharmony": "file:../react_native_openharmony",
-    "@amap/amap_lbs_map3d": "2.1.0",
-    "@amap/amap_lbs_common": ">=1.0.0",
+    "@rnoh/react-native-openharmony": "0.72.82",
+    "@amap/amap_lbs_map3d": "2.2.1",
+    "@amap/amap_lbs_common": ">=1.2.0",
   }
 }
