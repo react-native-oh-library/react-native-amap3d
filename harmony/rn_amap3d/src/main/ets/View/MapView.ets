@@ -494,6 +494,7 @@ export struct AMapView {
             circle.setStrokeColor(rgbaToHex(circleProp.strokeColor ? circleProp.strokeColor :
               "rgba(0, 0, 255, 0.5)"));
             circle.setStrokeWidth(circleProp.strokeWidth ? circleProp.strokeWidth : 5);
+	    circle.setZIndex(circleProp.zIndex ? circleProp.zIndex : 2);
           }
           break;
         case A_MAP_POLYGON_TYPE:
