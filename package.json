@@ -1,6 +1,6 @@
 {
   "name": "@react-native-ohos/react-native-amap3d",
-  "version": "3.2.5-rc.1",
+  "version": "3.3.0-rc.1",
   "description": "react-native 高德地图组件，支持 harmonyOS",
   "license": "MIT",
   "keywords": [
