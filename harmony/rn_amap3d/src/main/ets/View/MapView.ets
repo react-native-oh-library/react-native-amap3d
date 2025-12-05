@@ -443,25 +443,72 @@ export struct AMapView {
     let tagName = "";
     let flag = false;
     let flagLine = false;
+    let flagCircle = false;
+
+    // 收集当前所有 Circle 子组件的 tag
+    let currentCircleTags: Set<number> = new Set();
+    for (let i = 0; i < descriptor.childrenTags.length; i++) {
+      let childTagName =
+        this.ctx.rnInstance.getComponentNameFromDescriptorType(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i])?.type);
+      if (childTagName === A_MAP_CIRCLE_VIEW_TYPE) {
+        currentCircleTags.add(descriptor.childrenTags[i]);
+      }
+    }
+
+    // 删除不再需要的 Circle
+    let circlesToRemove: number[] = [];
+    GlobalCache.circleCacheMap.forEach((circle, circleTag) => {
+      if (circleTag != undefined) {
+        if (!currentCircleTags.has(circleTag)) {
+          circlesToRemove.push(circleTag);
+        }
+      }
+    });
+    for (let circleTag of circlesToRemove) {
+      let circleToRemove = GlobalCache.circleCacheMap.get(circleTag);
+      if (circleToRemove) {
+        circleToRemove.remove(); // 从地图上移除圆
+      }
+      GlobalCache.circleCacheMap.remove(circleTag); // 从缓存中删除
+    }
+
     for (let i = 0; i < descriptor.childrenTags.length; i++) {
       tagName =
         this.ctx.rnInstance.getComponentNameFromDescriptorType(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i])?.type);
       switch (tagName) {
         case A_MAP_CIRCLE_VIEW_TYPE:
-          let circleOptions = new CircleOptions();
+          flagCircle = false;
           let circleProp =
             this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).props as AMapCircleProps;
           let childCircleTag: number = this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag;
-          let circle = this.aMap?.addCircle(circleOptions);
-          //Put the overlay ring in the cache and hot-update the properties to modify
-          GlobalCache.circleCacheMap.set(childCircleTag, circle);
-          if (circle) {
-            circle.setRadius(circleProp.radius ? circleProp.radius : 5000);
-            circle.setCenter(new LatLng(circleProp.center.latitude, circleProp.center.longitude));
-            circle.setFillColor(rgbaToHex(circleProp.fillColor ? circleProp.fillColor : "rgba(255, 0, 0, 0.5)"));
-            circle.setStrokeColor(rgbaToHex(circleProp.strokeColor ? circleProp.strokeColor :
+
+          // 检查 Circle 是否已存在
+          let existingCircle = GlobalCache.circleCacheMap.get(childCircleTag);
+          if (existingCircle) {
+            // 更新已存在的 Circle 的属性
+            flagCircle = true;
+            existingCircle.setRadius(circleProp.radius ? circleProp.radius : 5000);
+            existingCircle.setCenter(new LatLng(circleProp.center.latitude, circleProp.center.longitude));
+            existingCircle.setFillColor(rgbaToHex(circleProp.fillColor ? circleProp.fillColor : "rgba(255, 0, 0, 0.5)"));
+            existingCircle.setStrokeColor(rgbaToHex(circleProp.strokeColor ? circleProp.strokeColor :
               "rgba(0, 0, 255, 0.5)"));
-            circle.setStrokeWidth(circleProp.strokeWidth ? circleProp.strokeWidth : 5);
+            existingCircle.setStrokeWidth(circleProp.strokeWidth ? circleProp.strokeWidth : 5);
+          }
+
+          if (!flagCircle) {
+            // 添加新的 Circle
+            let circleOptions = new CircleOptions();
+            let circle = this.aMap?.addCircle(circleOptions);
+            //Put the overlay ring in the cache and hot-update the properties to modify
+            GlobalCache.circleCacheMap.set(childCircleTag, circle);
+            if (circle) {
+              circle.setRadius(circleProp.radius ? circleProp.radius : 5000);
+              circle.setCenter(new LatLng(circleProp.center.latitude, circleProp.center.longitude));
+              circle.setFillColor(rgbaToHex(circleProp.fillColor ? circleProp.fillColor : "rgba(255, 0, 0, 0.5)"));
+              circle.setStrokeColor(rgbaToHex(circleProp.strokeColor ? circleProp.strokeColor :
+                "rgba(0, 0, 255, 0.5)"));
+              circle.setStrokeWidth(circleProp.strokeWidth ? circleProp.strokeWidth : 5);
+            }
           }
           break;
         case A_MAP_POLYGON_TYPE:
