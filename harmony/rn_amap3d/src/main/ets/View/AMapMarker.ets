@@ -28,11 +28,26 @@ export struct AMapMarker {
   markerTagAndDescriptorTagArray: Array<HashMap<number, string>> = []
   @State amapDescriptor: AMapMarkerDescriptor = {} as AMapMarkerDescriptor
   private unregisterDescriptorChangesListener?: () => void = undefined
+  private isDestroyed: boolean = false;
   static NAME: string = "AMapMarker";
-
+/**
+   * 检查组件是否仍然有效（未被销毁）
+   */
+  private isValid(): boolean {
+    let currentMapTag = GlobalCache.currentPageMarker.get(this.tag);
+    return !this.isDestroyed &&
+           !GlobalCache.destroyedMarkerTags.has(this.tag) &&
+           (currentMapTag === undefined || !GlobalCache.destroyedMapTags.has(currentMapTag));
+  }
   aboutToAppear(): void {
+     // 从销毁列表中移除（处理组件复用场景）
+    GlobalCache.destroyedMarkerTags.delete(this.tag);
     this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
       async (newDescriptor) => {
+        // 检查组件是否已销毁
+        if (!this.isValid()) {
+          return;
+        }
         /*------ 当RN侧属性props有更改 -------*/
         let currentMapTag = GlobalCache.currentPageMarker.get(this.tag)
         this.markers = GlobalCache.mapMarker.get(currentMapTag) ?? [];
@@ -43,9 +58,15 @@ export struct AMapMarker {
 
           for (let j = 0; j < this.markerTagAndDescriptorTagArray.length; ++j) {
             this.markerTagAndDescriptorTagArray[j].forEach(async (markerID: string, markerTag: number, map: HashMap<number, string>) => {
+              // 异步操作前检查组件是否已销毁
+              if (!this.isValid()) {
+                return;
+              }
               if (markerTag == this.tag) {
                 for (let i = 0; i < this.markers.length; ++i) {
                   if (this.markers[i].getId() == markerID) {
+                    // 每次操作前都检查有效性
+                    if (!this.isValid()) return;  
                     this.markers[i].setPosition(new LatLng(mapMarkerProps.position.latitude, mapMarkerProps.position.longitude));
                     this.markers[i].setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
                       mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
@@ -59,9 +80,12 @@ export struct AMapMarker {
                         let bitmapDes: BitmapDescriptor | undefined =
                           await BitmapDescriptorFactory.fromRawfilePath(globalContext, resoure);
                         this.markers[i].setIcon(bitmapDes);
+                        if (!this.isValid()) return;
                       } catch (error) {
+                        if (!this.isValid()) return;
                         let bitmapDesNull: BitmapDescriptor | undefined =
                           await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
+                          if (!this.isValid()) return;
                         if (bitmapDesNull) {
                           this.markers[i].setIcon(bitmapDesNull);
                         }
@@ -75,6 +99,14 @@ export struct AMapMarker {
         }
       }
     )
+  }
+
+aboutToDisappear(): void {
+    // 标记组件为已销毁
+    this.isDestroyed = true;
+    GlobalCache.destroyedMarkerTags.add(this.tag);
+    // 取消订阅
+    this.unregisterDescriptorChangesListener?.();
   }
 
   build() {
