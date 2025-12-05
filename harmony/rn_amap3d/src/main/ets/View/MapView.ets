@@ -86,8 +86,19 @@ export struct AMapView {
   private polylines : Array<Polyline> = new Array();
   private markerTagAndDescriptorTagArray : Array<HashMap<number, string>> = new Array();
   private polylineTagAndDescriptorTagArray : Array<HashMap<number, string>> = new Array();
-  private mapListener?: OnLocationChangedListener;
+   private mapListener?: OnLocationChangedListener;
+// 组件是否已销毁标志，用于防止异步操作访问已释放资源
+  private isDestroyed: boolean = false;
+
+  /**
+   * 检查组件是否仍然有效（未被销毁）
+   */
+  private isValid(): boolean {
+    return !this.isDestroyed && !GlobalCache.destroyedMapTags.has(this.tag);
+  }
   aboutToAppear(): void {
+    // 从销毁列表中移除（处理组件复用场景）
+    GlobalCache.destroyedMapTags.delete(this.tag);
     this.cleanupCallback = this.ctx.componentCommandReceiver.registerCommandCallback(
       this.tag,
       (command, args: ESObject[]) => {
@@ -102,6 +113,10 @@ export struct AMapView {
     this.show();
     this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
       (newDescriptor) => {
+        // 检查组件是否已销毁，避免访问已释放资源
+        if (!this.isValid()) {
+          return;
+        }
         if (this.aMap) {
           GlobalCache.mapPolyLine.clear();
           /*------ 当RN侧属性props有更改 -------*/
@@ -125,19 +140,29 @@ export struct AMapView {
   }
 
   aboutToDisappear(): void {
+     // 首先标记组件为已销毁，阻止后续异步操作
+    this.isDestroyed = true;
+    GlobalCache.destroyedMapTags.add(this.tag);
     if (this.mapViewCreateCallback) {
       MapViewManager.getInstance().unregisterMapViewCreatedCallback(this.mapViewCreateCallback);
     }
     this.unregisterDescriptorChangesListener?.()
     this.cleanupCallback?.()
-    GlobalCache.maps.get(this.tag)?.clear()
-    GlobalCache.mapViews.get(this.tag)?.onDestroy();
+     // 延迟清理资源，确保正在进行的异步操作有机会检查销毁标志
+    setTimeout(() => {
+      try {
+        GlobalCache.maps.get(this.tag)?.clear()
+        GlobalCache.mapViews.get(this.tag)?.onDestroy();
+    } catch (error) {
+        // 忽略清理过程中的错误
+      }
     GlobalCache.mapMarker.delete(this.tag);
     GlobalCache.markerTagAndDescriptorTag.delete(this.tag);
     GlobalCache.mapPolyLine.delete(this.tag);
     GlobalCache.polyLinesTagAndDescriptorTag.delete(this.tag);
     GlobalCache.polygonCacheMap.clear();
     GlobalCache.circleCacheMap.clear();
+    }, 500);
   }
 
   locationManager?:AMapLocationManagerImpl
@@ -247,6 +272,10 @@ export struct AMapView {
   }
 
   private mapViewCreateCallback = (mapview?: MapView, mapViewName?: string) => {
+    // 检查组件是否已销毁
+    if (!this.isValid()) {
+      return;
+    }
     if (!mapview) {
       return;
     }
@@ -256,7 +285,11 @@ export struct AMapView {
     mapview.onCreate();
     GlobalCache.mapViews.set(this.tag, mapview);
     this.mapView = GlobalCache.mapViews.get(this.tag);
-    this.mapView.getMapAsync(async (map: AMap) => {
+    this.mapView.getMapAsync(async (map:AMap) => {
+      // 异步回调中再次检查
+      if (!this.isValid()) {
+        return;
+      }
       GlobalCache.maps.set(this.tag, map);
       this.aMap = GlobalCache.maps.get(this.tag);
       this.aMap.setLocationSource(this);
@@ -472,6 +505,10 @@ export struct AMapView {
   }
 
   private async getOverlay(descriptor: GDMapViewDescriptor) {
+    // 检查组件是否已销毁
+    if (!this.isValid()) {
+      return;
+    }
     let tagName = "";
     let flag = false;
     let flagLine = false;
@@ -609,10 +646,16 @@ export struct AMapView {
 
           for (let index = 0; index < markerTagAndDescriptorTagArray.length; index++) {
             markerTagAndDescriptorTagArray[index].forEach(async (value: string, key: number, map: HashMap<number, string>) => {
+              // 异步操作前检查组件是否已销毁
+              if (!this.isValid()) {
+                return;
+              }
               if (markerDescriptor.tag == key) {
                 for (let markerIndex = 0; markerIndex < this.markers.length; markerIndex++) {
                   if (this.markers[markerIndex].getId() == value) {
                     flag = true;
+                    // 每次操作前都检查有效性
+                    if (!this.isValid()) return;
                     this.markers[markerIndex].setPosition(new LatLng(mapMarkerProps.position.latitude, mapMarkerProps.position.longitude));
                     this.markers[markerIndex].setAnchor(mapMarkerProps.anchor ? mapMarkerProps.anchor.x : 1,
                       mapMarkerProps.anchor ? mapMarkerProps.anchor.y : 0.5);
@@ -626,14 +669,20 @@ export struct AMapView {
                       let bitmapView : BitmapDescriptor | undefined = await BitmapDescriptorFactory.fromView(() => {
                         this.customMarkerBuilder(markerDescriptor.tag);
                       })
+                      // 异步操作后再次检查
+                      if (!this.isValid()) return;
                       this.markers[markerIndex].setIcon(bitmapView);
                     } else {
                       if (mapMarkerProps.icon) {
                         try {
                           await DownloadIcon.updataMakerIcon(this.getUIContext(), this.markers[markerIndex], mapMarkerProps.icon);
+                          // 异步操作后再次检查
+                          if (!this.isValid()) return;
                         } catch (error) {
+                          if (!this.isValid()) return;
                           let bitmapDesNull: BitmapDescriptor | undefined =
                             await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
+                            if (!this.isValid()) return;
                           if (bitmapDesNull) {
                             this.markers[markerIndex].setIcon(bitmapDesNull);
                           }
@@ -648,6 +697,10 @@ export struct AMapView {
           }
 
           if (!flag) {
+            // 检查组件是否已销毁
+            if (!this.isValid()) {
+              break;
+            }
             let markerOptions = new MarkerOptions();
             GlobalCache.currentPageMarker.set(markerDescriptor.tag, this.tag)
             this.markerTag.push(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i]).tag);
@@ -662,19 +715,37 @@ export struct AMapView {
                     let bitmapView: BitmapDescriptor | undefined = await BitmapDescriptorFactory.fromView(() => {
                       this.customMarkerBuilder(markerDescriptor.tag);
                     })
+                    // 异步操作后检查组件是否已销毁
+                    if (!this.isValid()) {
+                      break;
+                    }
                     markerOptions.setIcon(bitmapView);
                   } else {
                     if (mapMarkerProps.icon) {
                       try {
                         await DownloadIcon.updataMakerIcon(this.getUIContext(), markerOptions, mapMarkerProps.icon);
+                        // 异步操作后检查组件是否已销毁
+                        if (!this.isValid()) {
+                          break;
+                        } 
                       } catch (error) {
+                        if (!this.isValid()) {
+                          break;
+                        }
                         let bitmapDesNull: BitmapDescriptor | undefined =
                           await BitmapDescriptorFactory.fromRawfilePath(globalContext, "common/marker_default.png");
+                          if (!this.isValid()) {
+                          break;
+                        }
                         if (bitmapDesNull) {
                           markerOptions.setIcon(bitmapDesNull);
                         }
                       }
                     }
+                    }
+                  // 最后添加 marker 前再次检查
+                  if (!this.isValid()) {
+                    break;
                   }
                   markerOptions.setDraggable(mapMarkerProps.draggable ? mapMarkerProps.draggable : false);
                   markerOptions.setZIndex(mapMarkerProps.zIndex ? mapMarkerProps.zIndex : 1);
