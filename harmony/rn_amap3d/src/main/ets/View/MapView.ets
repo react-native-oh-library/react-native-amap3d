@@ -109,14 +109,24 @@ export struct AMapView {
     }
     this.unregisterDescriptorChangesListener?.()
     this.cleanupCallback?.()
-    GlobalCache.maps.get(this.tag)?.clear()
-    GlobalCache.mapViews.get(this.tag)?.onDestroy();
-    GlobalCache.mapMarker.delete(this.tag);
-    GlobalCache.markerTagAndDescriptorTag.delete(this.tag);
-    GlobalCache.mapPolyLine.delete(this.tag);
-    GlobalCache.polyLinesTagAndDescriptorTag.delete(this.tag);
-    GlobalCache.polygonCacheMap.clear();
-    GlobalCache.circleCacheMap.clear();
+      GlobalCache.maps.get(this.tag)?.clear()
+      GlobalCache.mapViews.get(this.tag)?.onDestroy();
+      GlobalCache.mapMarker.delete(this.tag);
+      GlobalCache.markerTagAndDescriptorTag.delete(this.tag);
+      GlobalCache.mapPolyLine.delete(this.tag);
+      GlobalCache.polyLinesTagAndDescriptorTag.delete(this.tag);
+      GlobalCache.polygonCacheMap.clear();
+      // 清理属于当前 MapView 的 Circle
+      let circleTagsToRemove: number[] = [];
+      GlobalCache.currentPageCircle.forEach((mapTag: number, circleTag: number) => {
+        if (mapTag === this.tag) {
+          circleTagsToRemove.push(circleTag);
+        }
+      });
+      for (let circleTag of circleTagsToRemove) {
+        GlobalCache.circleCacheMap.remove(circleTag);
+        GlobalCache.currentPageCircle.remove(circleTag);
+      }
   }
 
   //地图
@@ -455,13 +465,12 @@ export struct AMapView {
       }
     }
 
-    // 删除不再需要的 Circle
+    // 删除不再需要的 Circle（只删除属于当前 MapView 的）
     let circlesToRemove: number[] = [];
-    GlobalCache.circleCacheMap.forEach((circle, circleTag) => {
-      if (circleTag != undefined) {
-        if (!currentCircleTags.has(circleTag)) {
-          circlesToRemove.push(circleTag);
-        }
+    GlobalCache.currentPageCircle.forEach((mapTag: number, circleTag: number) => {
+      // 只处理属于当前 MapView 的 Circle
+      if (mapTag === this.tag && !currentCircleTags.has(circleTag)) {
+        circlesToRemove.push(circleTag);
       }
     });
     for (let circleTag of circlesToRemove) {
@@ -470,6 +479,7 @@ export struct AMapView {
         circleToRemove.remove(); // 从地图上移除圆
       }
       GlobalCache.circleCacheMap.remove(circleTag); // 从缓存中删除
+      GlobalCache.currentPageCircle.remove(circleTag); // 从映射关系中删除
     }
 
     for (let i = 0; i < descriptor.childrenTags.length; i++) {
@@ -501,6 +511,8 @@ export struct AMapView {
             let circle = this.aMap?.addCircle(circleOptions);
             //Put the overlay ring in the cache and hot-update the properties to modify
             GlobalCache.circleCacheMap.set(childCircleTag, circle);
+            // 记录 Circle 与 MapView 的关联关系
+            GlobalCache.currentPageCircle.set(childCircleTag, this.tag);
             if (circle) {
               circle.setRadius(circleProp.radius ? circleProp.radius : 5000);
               circle.setCenter(new LatLng(circleProp.center.latitude, circleProp.center.longitude));
