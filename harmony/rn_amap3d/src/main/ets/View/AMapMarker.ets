@@ -77,6 +77,11 @@ export struct AMapMarker {
     )
   }
 
+  aboutToDisappear(): void {
+    // 取消订阅
+    this.unregisterDescriptorChangesListener?.();
+  }
+
   build() {
     ContentSlot(this.ctx.getContentForTag(this.tag))
   }

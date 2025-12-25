@@ -90,6 +90,11 @@ export struct AMapCircle {
       }
     )
   }
+
+  aboutToDisappear(): void {
+    this.unregisterDescriptorChangesListener?.();
+  }
+
   build() {
   }
 }
