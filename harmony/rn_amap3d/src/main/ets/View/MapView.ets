@@ -127,6 +127,16 @@ export struct AMapView {
         GlobalCache.circleCacheMap.remove(circleTag);
         GlobalCache.currentPageCircle.remove(circleTag);
       }
+      // 清理属于当前 MapView 的 Marker
+      let markerTagsToRemove: number[] = [];
+      GlobalCache.currentPageMarker.forEach((mapTag: number, markerTag: number) => {
+        if (mapTag === this.tag) {
+          markerTagsToRemove.push(markerTag);
+        }
+      });
+      for (let markerTag of markerTagsToRemove) {
+        GlobalCache.currentPageMarker.remove(markerTag);
+      }
   }
 
   //地图
@@ -457,11 +467,15 @@ export struct AMapView {
 
     // 收集当前所有 Circle 子组件的 tag
     let currentCircleTags: Set<number> = new Set();
+    // 收集当前所有 Marker 子组件的 tag
+    let currentMarkerTags: Set<number> = new Set();
     for (let i = 0; i < descriptor.childrenTags.length; i++) {
       let childTagName =
         this.ctx.rnInstance.getComponentNameFromDescriptorType(this.ctx.descriptorRegistry.getDescriptor(descriptor.childrenTags[i])?.type);
       if (childTagName === A_MAP_CIRCLE_VIEW_TYPE) {
         currentCircleTags.add(descriptor.childrenTags[i]);
+      } else if (childTagName === A_MAP_MARKER_TYPE) {
+        currentMarkerTags.add(descriptor.childrenTags[i]);
       }
     }
 
@@ -481,6 +495,50 @@ export struct AMapView {
       GlobalCache.circleCacheMap.remove(circleTag); // 从缓存中删除
       GlobalCache.currentPageCircle.remove(circleTag); // 从映射关系中删除
     }
+
+    // 删除不再需要的 Marker（只删除属于当前 MapView 的）
+    let markersToRemove: number[] = [];
+    GlobalCache.currentPageMarker.forEach((mapTag: number, markerTag: number) => {
+      // 只处理属于当前 MapView 的 Marker
+      if (mapTag === this.tag && !currentMarkerTags.has(markerTag)) {
+        markersToRemove.push(markerTag);
+      }
+    });
+    
+    // 删除 Marker
+    let markers = GlobalCache.mapMarker.get(this.tag) ?? [];
+    let markerTagAndDescriptorTagArray = GlobalCache.markerTagAndDescriptorTag.get(this.tag) ?? [];
+    
+    for (let markerTag of markersToRemove) {
+      // 从地图上移除 Marker
+      for (let index = 0; index < markerTagAndDescriptorTagArray.length; index++) {
+        markerTagAndDescriptorTagArray[index].forEach((markerID: string, tag: number) => {
+          if (tag === markerTag) {
+            // 找到对应的 Marker 并移除
+            for (let markerIndex = 0; markerIndex < markers.length; markerIndex++) {
+              if (markers[markerIndex].getId() === markerID) {
+                markers[markerIndex].remove(); // 从地图上移除 Marker
+                markers.splice(markerIndex, 1); // 从数组中删除
+                break;
+              }
+            }
+            markerTagAndDescriptorTagArray.splice(index, 1); // 从映射关系中删除
+          }
+        });
+      }
+      GlobalCache.currentPageMarker.remove(markerTag); // 从映射关系中删除
+      // 从 markerTag 数组中删除
+      let markerTagIndex = this.markerTag.indexOf(markerTag);
+      if (markerTagIndex !== -1) {
+        this.markerTag.splice(markerTagIndex, 1);
+      }
+    }
+    
+    // 更新缓存
+    GlobalCache.mapMarker.set(this.tag, markers);
+    GlobalCache.markerTagAndDescriptorTag.set(this.tag, markerTagAndDescriptorTagArray);
+    this.markers = markers;
+    this.markerTagAndDescriptorTagArray = markerTagAndDescriptorTagArray;
 
     for (let i = 0; i < descriptor.childrenTags.length; i++) {
       tagName =
