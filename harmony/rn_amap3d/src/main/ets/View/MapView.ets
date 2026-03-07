@@ -92,6 +92,14 @@ export struct AMapView {
     this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
       (newDescriptor) => {
         if (this.aMap) {
+          const newGDMapDescriptor = newDescriptor as GDMapViewDescriptor;
+          const oldProps = this.gDMapDescriptor?.props;
+          const newProps = newGDMapDescriptor.props;
+          // 判断是否有实质性的属性变化
+          if (oldProps && newProps && (JSON.stringify(oldProps) == JSON.stringify(newProps))) {
+            // props 没有变化，忽略此次回调
+            return;
+          }
           GlobalCache.mapPolyLine.clear();
           /*------ 当RN侧属性props有更改 -------*/
           this.gDMapDescriptor = (newDescriptor as GDMapViewDescriptor)
