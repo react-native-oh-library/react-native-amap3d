@@ -37,6 +37,14 @@ export struct AMapPolyline {
   aboutToAppear(): void {
     this.unregisterDescriptorChangesListener = this.ctx.descriptorRegistry.subscribeToDescriptorChanges(this.tag,
       async (newDescriptor) => {
+        const newGDMapDescriptor = newDescriptor as AMapPolylineDescriptor;
+        const oldProps = this.amapDescriptor?.props;
+        const newProps = newGDMapDescriptor.props;
+        // 判断是否有实质性的属性变化
+        if (oldProps && newProps && (JSON.stringify(oldProps) == JSON.stringify(newProps))) {
+          // props 没有变化，忽略此次回调
+          return;
+        }
         /*------ 当RN侧属性props有更改 -------*/
         let currentMapTag = GlobalCache.currentPagePolyline.get(this.tag)
         this.polyLines = GlobalCache.mapPolyLine.get(currentMapTag) ?? [];
